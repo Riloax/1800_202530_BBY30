@@ -60,7 +60,7 @@ elmo-hikes/
 
 ## Contributors
 - **Harun** - BCIT CST Student with a passion for outdoor adventures and user-friendly applications. Fun fact: Loves playing games.
-- **Teammate Name** - BCIT CST Student, Frontend enthusiast with a knack for creative design. Fun fact: Has a collection of over 50 houseplants.
+- **HAHA** - BCIT CST Student, Frontend enthusiast with a knack for creative design. Fun fact: Has a collection of over 50 houseplants.
 
 ---
 
