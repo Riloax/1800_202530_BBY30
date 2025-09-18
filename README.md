@@ -60,7 +60,7 @@ elmo-hikes/
 
 ## Contributors
 - **Blake** - BCIT CST Student with a passion for outdoor adventures and user-friendly applications. Fun fact: Can do a backflip.
-- **Teammate Name** - BCIT CST Student, Frontend enthusiast with a knack for creative design. Fun fact: Has a collection of over 50 houseplants.
+- **Teammate** - BCIT CST Student, Frontend enthusiast with a knack for creative design. Fun fact: Has a collection of over 50 houseplants.
 
 ---
 
