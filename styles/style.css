@@ -1,1 +1,103 @@
+/* styles.css */
 
+body {
+  background-color: #999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  /* min-height: 100vh; */
+}
+
+.navbar {
+  background-color: #ddd;
+  border: 2px solid #008cff;
+  border-radius: 50px;
+  width: 80%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  box-sizing: border-box;
+  margin-top: 10px;
+}
+
+.logo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: black;
+  margin: 0;
+}
+
+.icons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 20px;
+}
+
+.icon {
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.icon:hover {
+  transform: scale(1.1);
+}
+
+#main-image {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  /* border-radius: 90px; */
+}
+
+#main-image img {
+  width: 80%;
+  height: auto;
+  height: 60vh;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  filter: saturate(0%);
+  border-radius: 50px;
+}
+
+.basic-button {
+  background-color: #ddd;
+  color: black;
+
+  padding: 10px 20px;
+  border: none;
+
+  border-radius: 90px;
+  box-shadow: 0 10px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.basic-button:hover {
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3); /* deeper shadow on hover */
+  transform: translateY(-2px); /* slight lift effect */
+}
+
+#login-button {
+  margin: 3rem;
+  width: 70vw;
+  height: 8vh;
+  font-weight: bolder;
+  font-size: 24pt;
+}
+
+#service-button {
+  margin-bottom: 1rem;
+  width: 80vw;
+  height: 6vh;
+  font-weight: bolder;
+  font-size: 12pt;
+}
