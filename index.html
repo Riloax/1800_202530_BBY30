@@ -1,36 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo Together</title>
     <link rel="stylesheet" href="styles/style.css" />
-</head>
+  </head>
 
-<body>
+  <body>
     <nav class="navbar">
-        <h1 class="logo">Todo Together</h1>
+      <h1 class="logo">Todo Together</h1>
 
-        <!-- icons container with images -->
-        <div class="icons">
-            <img src="https://www.freeiconspng.com/thumbs/search-icon-png/search-icon-png-5.png" alt="Search icon"
-                class="icon">
-            <img src="https://static.thenounproject.com/png/1524589-200.png" alt="Settings icon" class="icon">
-        </div>
+      <!-- icons container with images -->
+      <div class="icons">
+        <img
+          src="https://www.freeiconspng.com/thumbs/search-icon-png/search-icon-png-5.png"
+          alt="Search icon"
+          class="icon"
+        />
+        <img
+          src="https://static.thenounproject.com/png/1524589-200.png"
+          alt="Settings icon"
+          class="icon"
+        />
+      </div>
     </nav>
 
     <div id="main-image">
-        <img src="images/main.jpg" height="200px">
+      <img src="images/main.jpg" height="200px" />
     </div>
 
     <div>
-        <button id="login-button" class="basic-button">Login</button>
+      <button id="login-button" class="basic-button">Login</button>
     </div>
 
     <div>
-        <button id="service-button" class="basic-button">Terms of service</button>
+      <button id="service-button" class="basic-button">Terms of service</button>
     </div>
-</body>
 
+    <script>
+      // Go login page when click on login button
+      document
+        .getElementById("login-button")
+        .addEventListener("click", function () {
+          window.location.href = "login.html";
+        });
+    </script>
+  </body>
 </html>
