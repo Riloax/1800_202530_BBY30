@@ -1,0 +1,146 @@
+/* General Page Layout */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #d3d3d3;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Navbar */
+.navbar {
+  background-color: #fff;
+  width: 90%;
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.burger {
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+.search-bar {
+  flex-grow: 1;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+/* Schedule Section */
+.schedule-section {
+  background-color: #fff;
+  width: 90%;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.schedule-section h2 {
+  margin-bottom: 10px;
+}
+
+.schedule-box {
+  background-color: #f0f0f0;
+  border-radius: 15px;
+  padding: 20px;
+  position: relative;
+}
+
+.calendar-placeholder {
+  height: 250px;
+  background: repeating-linear-gradient(
+    90deg,
+    #fff,
+    #fff 19%,
+    #ccc 20%
+  );
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Floating Add Button */
+.add-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background-color: #222;
+  color: #fff;
+  font-size: 28px;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.add-btn:hover {
+  background-color: #444;
+}
+
+/* Reminder Section */
+.reminder-section {
+  background-color: #fff;
+  width: 90%;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.reminder-section h2 {
+  margin-bottom: 10px;
+}
+
+.reminder-box {
+  background-color: #f8f8f8;
+  border-radius: 15px;
+  padding: 15px;
+  position: relative;
+}
+
+.reminder-category {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.reminder-category h3 {
+  margin: 5px 0;
+  font-size: 16px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
+}
+
+.reminder-category ul {
+  list-style-type: none;
+  padding-left: 15px;
+  margin: 5px 0;
+}
+
+.reminder-category li {
+  padding: 3px 0;
+}
