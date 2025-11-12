@@ -144,3 +144,97 @@ body {
 .reminder-category li {
   padding: 3px 0;
 }
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 10px 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.burger {
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.search-bar {
+  flex-grow: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+/* DROPDOWN MENU */
+.dropdown-menu {
+  position: absolute;
+  top: 60px;
+  left: 10px;
+  width: 250px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  padding: 15px;
+  display: none;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
+  z-index: 100;
+}
+
+.dropdown-menu.show {
+  display: flex;
+}
+
+.menu-section {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.menu-section h3 {
+  margin: 5px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.menu-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 0;
+  font-size: 16px;
+  cursor: pointer;
+  color: #333;
+}
+
+.menu-btn:hover {
+  color: #0077cc;
+}
+
+.logout {
+  color: #c0392b;
+}
+
+label {
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* MAIN CONTENT */
+.content {
+  padding: 30px;
+}
+
+/* Simple animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
