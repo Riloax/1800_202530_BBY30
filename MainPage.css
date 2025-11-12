@@ -419,12 +419,6 @@ body {
   padding: 3px 0;
 }
 
-/* =================================
-   DRAG & DROP İÇİN EKLEMELER
-   Mevcut CSS dosyanızın SONUNA ekleyin
-   ================================= */
-
-/* Task Item için Drag özellikleri */
 .task-item {
   user-select: none;
   -webkit-user-select: none;
@@ -433,38 +427,35 @@ body {
   -webkit-user-drag: element;
 }
 
-/* Dragging state - Task sürüklenirken */
+/* Dragging state  */
 .task-item.dragging {
   opacity: 0.5;
   transform: scale(1.05);
 }
 
-/* Drag over effect - Üzerine sürüklerken hücre */
+/* Drag over effect */
 .day-cell.drag-over {
   background-color: #e3f2fd !important;
   border: 2px dashed #2196f3;
 }
 
-/* Task içindeki metinler için */
 .task-name,
 .task-time {
   pointer-events: none;
 }
 
-/* Schedule box - Sadece dikey scroll, yatay scroll YOK */
+/* Schedule box */
 .schedule-box {
-  overflow-x: hidden !important; /* Yatay scroll'u tamamen kapat */
-  overflow-y: auto !important; /* Sadece dikey scroll */
-  touch-action: pan-y; /* Sadece dikey kaydırmaya izin ver */
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  touch-action: pan-y;
 }
 
-/* Calendar container - Yatay scroll engelle */
 .calendar-container {
   overflow-x: visible;
   overflow-y: visible;
 }
 
-/* Task üzerinde scroll engelle */
 .task-item:active,
 .task-item:hover {
   touch-action: none;
