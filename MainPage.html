@@ -1,58 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Main Page</title>
-  <link rel="stylesheet" href="MainPage.css" />
-</head>
-<body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <button class="burger">&#9776;</button>
-    <input type="text" placeholder="Search" class="search-bar" />
-  </nav>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Main Page</title>
+    <link rel="stylesheet" href="MainPage.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <button class="burger">&#9776;</button>
+      <input type="text" placeholder="Search" class="search-bar" />
+    </nav>
 
-  <!-- Schedule Section -->
-  <section class="schedule-section">
-    <h2>Schedule</h2>
-    <div class="schedule-box">
-      <!-- Placeholder calendar image -->
-      <div class="calendar-placeholder">
-        <p>Weekly Schedule</p>
+    <!-- Schedule Section -->
+    <section class="schedule-section">
+      <h2>Schedule</h2>
+      <div class="week-navigation">
+        <button class="week-btn" id="prevWeek">← Previous Week</button>
+        <span class="week-display" id="weekDisplay"></span>
+        <button class="week-btn" id="nextWeek">Next Week →</button>
       </div>
-      <button class="add-btn">+</button>
-    </div>
-  </section>
+      <div class="schedule-box">
+        <!-- Weekly Calendar -->
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <div class="time-column">Time</div>
+            <div class="day-column" id="day0">Mon</div>
+            <div class="day-column" id="day1">Tue</div>
+            <div class="day-column" id="day2">Wed</div>
+            <div class="day-column" id="day3">Thu</div>
+            <div class="day-column" id="day4">Fri</div>
+            <div class="day-column" id="day5">Sat</div>
+            <div class="day-column" id="day6">Sun</div>
+          </div>
+          <div class="calendar-body" id="calendarBody">
+            <!-- Time slots will be generated here -->
+          </div>
+        </div>
+        <button class="add-btn" id="addBtn">+</button>
+      </div>
+    </section>
 
-  <!-- Reminder Section -->
-  <section class="reminder-section">
-    <h2>Reminder</h2>
-    <div class="reminder-box">
-      <div class="reminder-category">
-        <h3>Unsorted</h3>
-        <ul>
-          <li>1800 Project</li>
-          <li>Inventory list</li>
-          <li>Mainpage</li>
-        </ul>
+    <!-- Task Modal -->
+    <div id="taskModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">Add New Task</div>
+        <form id="taskForm">
+          <div class="form-group">
+            <label for="taskName">Task Name</label>
+            <input
+              type="text"
+              id="taskName"
+              placeholder="Enter task name"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="taskDate">Deadline Date</label>
+            <input type="date" id="taskDate" required />
+          </div>
+          <div class="form-group">
+            <label for="taskTime">Deadline Time</label>
+            <input type="time" id="taskTime" required />
+          </div>
+          <div class="modal-buttons">
+            <button type="button" class="modal-btn cancel-btn" id="cancelBtn">
+              Cancel
+            </button>
+            <button type="submit" class="modal-btn save-btn">Save Task</button>
+          </div>
+        </form>
       </div>
-      <div class="reminder-category">
-        <h3>Urgent</h3>
-        <ul>
-          <li>Submit Lab 7</li>
-          <li>Finish Report</li>
-        </ul>
-      </div>
-      <div class="reminder-category">
-        <h3>List</h3>
-        <ul>
-          <li>Buy groceries</li>
-          <li>Walk the dog</li>
-        </ul>
-      </div>
-      <button class="add-btn">+</button>
     </div>
-  </section>
-</body>
+
+    <!-- Reminder Section -->
+    <section class="reminder-section">
+      <h2>Reminder</h2>
+      <div class="reminder-box">
+        <div class="reminder-category">
+          <h3>Unsorted</h3>
+          <ul>
+            <li>1800 Project</li>
+            <li>Inventory list</li>
+            <li>Mainpage</li>
+          </ul>
+        </div>
+        <div class="reminder-category">
+          <h3>Urgent</h3>
+          <ul>
+            <li>Submit Lab 7</li>
+            <li>Finish Report</li>
+          </ul>
+        </div>
+        <div class="reminder-category">
+          <h3>List</h3>
+          <ul>
+            <li>Buy groceries</li>
+            <li>Walk the dog</li>
+          </ul>
+        </div>
+        <button class="add-btn">+</button>
+      </div>
+    </section>
+
+    <script type="module" src="MainPage.js"></script>
+  </body>
 </html>
