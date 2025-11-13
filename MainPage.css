@@ -12,7 +12,7 @@ body {
 }
 
 /* Navbar */
-.navbar {
+ .navbar {
   background-color: #fff;
   width: 90%;
   margin-top: 20px;
@@ -38,7 +38,7 @@ body {
   border-radius: 10px;
   border: 1px solid #ccc;
   font-size: 16px;
-}
+} 
 
 /* Schedule Section */
 .schedule-section {
@@ -419,6 +419,99 @@ body {
   padding: 3px 0;
 }
 
+/* NAVBAR */
+.navbar {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 10px 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.burger {
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.search-bar {
+  flex-grow: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+/* DROPDOWN MENU */
+.dropdown-menu {
+  position: absolute;
+  top: 60px;
+  left: 10px;
+  width: 250px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  padding: 15px;
+  display: none;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
+  z-index: 100;
+}
+
+.dropdown-menu.show {
+  display: flex;
+}
+
+.menu-section {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.menu-section h3 {
+  margin: 5px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.menu-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 0;
+  font-size: 16px;
+  cursor: pointer;
+  color: #333;
+}
+
+.menu-btn:hover {
+  color: #0077cc;
+}
+
+.logout {
+  color: #c0392b;
+}
+
+label {
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* MAIN CONTENT */
+.content {
+  padding: 30px;
+}
+
+/* Simple animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .task-item {
   user-select: none;
   -webkit-user-select: none;
@@ -459,4 +552,152 @@ body {
 .task-item:active,
 .task-item:hover {
   touch-action: none;
+}
+
+/* Schedule Section */
+.schedule-section {
+  background-color: #fff;
+  width: 90%;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.schedule-section h2 {
+  margin-bottom: 10px;
+}
+
+.schedule-box {
+  background-color: #f0f0f0;
+  border-radius: 15px;
+  padding: 20px;
+  position: relative;
+}
+
+.calendar-placeholder {
+  height: 250px;
+  background: repeating-linear-gradient(
+    90deg,
+    #fff,
+    #fff 19%,
+    #ccc 20%
+  );
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Floating Add Button */
+.add-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background-color: #222;
+  color: #fff;
+  font-size: 28px;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.add-btn:hover {
+  background-color: #444;
+}
+
+/* Reminder Section */
+.reminder-section {
+  background-color: #fff;
+  width: 90%;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.reminder-section h2 {
+  margin-bottom: 10px;
+}
+
+.reminder-box {
+  background-color: #f8f8f8;
+  border-radius: 15px;
+  padding: 15px;
+  position: relative;
+}
+
+.reminder-category {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.reminder-category h3 {
+  margin: 5px 0;
+  font-size: 16px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
+}
+
+.reminder-category ul {
+  list-style-type: none;
+  padding-left: 15px;
+  margin: 5px 0;
+}
+
+.reminder-category li {
+  padding: 3px 0;
+}
+
+/* Fix burger button being hidden behind calendar */
+.navbar, .burger {
+  position: relative;
+  z-index: 9999;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: 60px;
+  left: 10px;
+  width: 250px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  padding: 15px;
+  display: none;
+  flex-direction: column;
+  z-index: 9999;
+}
+
+.dropdown-menu.show {
+  display: flex;
+}
+
+.menu-section {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  padding: 8px 0;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
 }
