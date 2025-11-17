@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Main Page</title>
-  <link rel="stylesheet" href="MainPage.css" />
-</head>
-<body>
-   <!-- Top Navbar -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Main Page</title>
+    <link rel="stylesheet" href="MainPage.css" />
+  </head>
+  <body>
+     <!-- Top Navbar -->
   <nav class="navbar">
     <button class="burger" id="burger-btn">&#9776;</button>
     <input type="text" placeholder="Search" class="search-bar" />
@@ -32,12 +32,6 @@
     </div>
   </div>
 
-  <!-- Main content example -->
-  <main class="content">
-    <h1>Welcome to MyTeam Scheduler</h1>
-    <p>Your schedule and reminders go here.</p>
-  </main>
-
   <script>
     // Toggle dropdown menu
     const burgerBtn = document.getElementById('burger-btn');
@@ -47,7 +41,7 @@
       dropdownMenu.classList.toggle('show');
     });
 
-    // hide menu if clicked outside
+    // Optional: hide menu if clicked outside
     window.addEventListener('click', (e) => {
       if (!burgerBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
         dropdownMenu.classList.remove('show');
@@ -55,13 +49,14 @@
     });
   </script>
 
-  <!-- Schedule Section -->
-  <section class="schedule-section">
-    <h2>Schedule</h2>
-    <div class="schedule-box">
-      <!-- Placeholder calendar image -->
-      <div class="calendar-placeholder">
-        <p>Weekly Schedule</p>
+
+    <!-- Schedule Section -->
+    <section class="schedule-section">
+      <h2>Schedule</h2>
+      <div class="week-navigation">
+        <button class="week-btn" id="prevWeek">← Previous Week</button>
+        <span class="week-display" id="weekDisplay"></span>
+        <button class="week-btn" id="nextWeek">Next Week →</button>
       </div>
       <div class="schedule-box">
         <!-- Weekly Calendar -->
