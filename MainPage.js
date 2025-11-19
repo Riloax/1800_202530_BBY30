@@ -628,3 +628,31 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
+// Reminder Part
+
+const switchButtons = document.querySelectorAll(".reminder-switch button");
+const switchPill = document.querySelector(".switch-pill");
+
+switchButtons.forEach((btn, index) => {
+  btn.addEventListener("click", () => {
+    // update active button
+    switchButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    // move pill
+    if (index === 0) {
+      // Personal
+      switchPill.classList.remove("right");
+      switchPill.classList.add("left");
+    } else {
+      // Group
+      switchPill.classList.remove("left");
+      switchPill.classList.add("right");
+    }
+
+    // later you can use this to change content
+    const type = btn.dataset.type; // "group" or "personal"
+    console.log("Current reminder type:", type);
+  });
+});

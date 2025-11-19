@@ -515,11 +515,79 @@ label {
   position: relative;
 }
 
-.reminder-section h2 {
-  margin-bottom: 10px;
+/* ============================================
+   REMINDER HEADER
+   ============================================ */
+.reminder-header h2 {
+  margin: 0;
 }
 
-.reminder-box {
+.reminder-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+}
+
+.reminder-header h2 {
+  margin: 0;
+}
+
+.reminder-switch {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0rem;
+  border-radius: 90px;
+  background-color: #f3f3f3;
+  overflow: hidden;
+}
+
+/* sliding pill background */
+.switch-pill {
+  position: absolute;
+  width: 55%; /* half of container minus padding */
+  height: 100%;
+  background-color: rgb(34, 205, 148);
+  border-radius: 90px;
+  transition: transform 0.25s ease;
+  z-index: 0;
+}
+
+.reminder-switch button {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 0;
+  padding: 0.25rem 1.5rem;
+  border-radius: 90px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: gray;
+}
+
+.reminder-switch button.active {
+  /* background-color: #333; */
+  color: white;
+  font-weight: 600;
+}
+
+.switch-pill.left {
+  transform: translateX(0%);
+}
+
+.switch-pill.right {
+  transform: translateX(95%);
+}
+
+/* ============================================
+   REMINDER CONTENT
+   ============================================ */
+.reminder-content {
   background-color: #f8f8f8;
   border-radius: 15px;
   padding: 15px;
@@ -787,7 +855,7 @@ label {
     font-size: 18px;
   }
 
-  .reminder-box {
+  .reminder-content {
     padding: 10px;
   }
 
