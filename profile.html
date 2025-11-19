@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile</title>
+    <link rel="stylesheet" href="Profile.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <button class="back-btn" onclick="window.location.href='MainPage.html'">
+        ← Back
+      </button>
+      <h1>Profile</h1>
+    </nav>
+
+    <!-- Profile Container -->
+    <div class="profile-container">
+      <!-- Profile Picture Section -->
+      <div class="profile-picture-section">
+        <div class="profile-picture-wrapper">
+          <img src="" alt="Profile" id="profileImage" class="profile-picture" />
+          <div class="upload-overlay" id="uploadOverlay">
+            <span>📷</span>
+            <p>Change Photo</p>
+          </div>
+        </div>
+        <input
+          type="file"
+          id="imageInput"
+          accept="image/*"
+          style="display: none"
+        />
+        <button class="upload-btn" id="uploadBtn">Upload Photo</button>
+      </div>
+
+      <!-- Profile Info Section -->
+      <div class="profile-info-section">
+        <div class="info-card">
+          <label>Name</label>
+          <div class="info-value" id="userName">Loading...</div>
+        </div>
+
+        <div class="info-card">
+          <label>Email</label>
+          <div class="info-value" id="userEmail">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="btn btn-primary" id="saveBtn">Save Changes</button>
+        <button class="btn btn-secondary" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <script type="module" src="Profile.js"></script>
+  </body>
+</html>

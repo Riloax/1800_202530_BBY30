@@ -7,48 +7,65 @@
     <link rel="stylesheet" href="MainPage.css" />
   </head>
   <body>
-     <!-- Top Navbar -->
-  <nav class="navbar">
-    <button class="burger" id="burger-btn">&#9776;</button>
-    <input type="text" placeholder="Search" class="search-bar" />
-  </nav>
+    <!-- Top Navbar -->
+    <nav class="navbar">
+      <button class="burger" id="burger-btn">&#9776;</button>
+      <input type="text" placeholder="Search" class="search-bar" />
+    </nav>
 
-  <!-- Dropdown Menu -->
-  <div class="dropdown-menu" id="dropdown-menu">
-    <div class="menu-section">
-      <button class="menu-btn">👤 Profile</button>
+    <!-- Dropdown Menu -->
+    <div class="dropdown-menu" id="dropdown-menu">
+      <div class="menu-section">
+        <button class="menu-btn" onclick="window.location.href='Profile.html'">
+          👤 Profile
+        </button>
+      </div>
+
+      <div class="menu-section">
+        <h3>Tasks</h3>
+        <label
+          ><input
+            type="checkbox"
+            class="category-filter"
+            data-category="study"
+            checked
+          />
+          Study</label
+        ><br />
+        <label
+          ><input
+            type="checkbox"
+            class="category-filter"
+            data-category="work"
+            checked
+          />
+          Work</label
+        ><br />
+        <label
+          ><input
+            type="checkbox"
+            class="category-filter"
+            data-category="exercise"
+            checked
+          />
+          Exercise</label
+        ><br />
+        <label
+          ><input
+            type="checkbox"
+            class="category-filter"
+            data-category="group"
+            checked
+          />
+          Group Task</label
+        ><br />
+      </div>
+
+      <div class="menu-section">
+        <button class="menu-btn">📜 Terms of Service</button>
+        <button class="menu-btn logout" id="logout-btn">🚪 Logout</button>
+      </div>
     </div>
-
-    <div class="menu-section">
-      <h3>Tasks</h3>
-      <label><input type="checkbox"> Study</label><br>
-      <label><input type="checkbox"> Work</label><br>
-      <label><input type="checkbox"> Exercise</label><br>
-    </div>
-
-    <div class="menu-section">
-      <button class="menu-btn">📜 Terms of Service</button>
-      <button class="menu-btn logout">🚪 Logout</button>
-    </div>
-  </div>
-
-  <script>
-    // Toggle dropdown menu
-    const burgerBtn = document.getElementById('burger-btn');
-    const dropdownMenu = document.getElementById('dropdown-menu');
-
-    burgerBtn.addEventListener('click', () => {
-      dropdownMenu.classList.toggle('show');
-    });
-
-    // Optional: hide menu if clicked outside
-    window.addEventListener('click', (e) => {
-      if (!burgerBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
-        dropdownMenu.classList.remove('show');
-      }
-    });
-  </script>
-
 
     <!-- Schedule Section -->
     <section class="schedule-section">
@@ -75,8 +92,8 @@
             <!-- Time slots will be generated here -->
           </div>
         </div>
-        <button class="add-btn" id="addBtn">+</button>
       </div>
+      <button class="add-btn" id="addBtn">+</button>
     </section>
 
     <!-- Task Modal -->
@@ -92,6 +109,15 @@
               placeholder="Enter task name"
               required
             />
+          </div>
+          <div class="form-group">
+            <label for="taskCategory">Category</label>
+            <select id="taskCategory" required>
+              <option value="study">Study</option>
+              <option value="work">Work</option>
+              <option value="exercise">Exercise</option>
+              <option value="group">Group Task</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="taskDate">Deadline Date</label>
@@ -137,7 +163,7 @@
             <li>Walk the dog</li>
           </ul>
         </div>
-        <button class="add-btn">+</button>
+        <button class="add-rbtn">+</button>
       </div>
     </section>
 
