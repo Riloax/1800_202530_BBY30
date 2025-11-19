@@ -1,0 +1,291 @@
+/* ============================================
+   PROFILE PAGE STYLES
+   ============================================ */
+
+/* Global Styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #d3d3d3;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* ============================================
+   NAVIGATION BAR
+   ============================================ */
+
+.navbar {
+  background-color: #fff;
+  width: 90%;
+  margin-top: 20px;
+  padding: 15px 20px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #222;
+  padding: 5px 10px;
+  transition: color 0.3s;
+}
+
+.back-btn:hover {
+  color: #667eea;
+}
+
+.navbar h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #222;
+  flex-grow: 1;
+  text-align: center;
+  margin-right: 60px; /* Balance the back button */
+}
+
+/* ============================================
+   PROFILE CONTAINER
+   ============================================ */
+
+.profile-container {
+  background-color: #fff;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 20px;
+  padding: 40px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   PROFILE PICTURE SECTION
+   ============================================ */
+
+.profile-picture-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.profile-picture-wrapper {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #667eea;
+  background-color: #f0f0f0;
+}
+
+.upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  color: white;
+}
+
+.profile-picture-wrapper:hover .upload-overlay {
+  opacity: 1;
+}
+
+.upload-overlay span {
+  font-size: 40px;
+  margin-bottom: 5px;
+}
+
+.upload-overlay p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.upload-btn {
+  background-color: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.upload-btn:hover {
+  background-color: #5568d3;
+}
+
+/* ============================================
+   PROFILE INFO SECTION
+   ============================================ */
+
+.profile-info-section {
+  margin-bottom: 30px;
+}
+
+.info-card {
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+}
+
+.info-card label {
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.info-value {
+  font-size: 16px;
+  color: #222;
+  font-weight: 500;
+}
+
+/* ============================================
+   ACTION BUTTONS
+   ============================================ */
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.btn {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background-color: #667eea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media screen and (max-width: 426px) {
+  .navbar {
+    width: 95%;
+    padding: 12px 15px;
+  }
+
+  .navbar h1 {
+    font-size: 20px;
+    margin-right: 40px;
+  }
+
+  .back-btn {
+    font-size: 16px;
+  }
+
+  .profile-container {
+    width: 95%;
+    padding: 30px 20px;
+    margin-top: 20px;
+  }
+
+  .profile-picture-wrapper {
+    width: 120px;
+    height: 120px;
+  }
+
+  .upload-overlay span {
+    font-size: 30px;
+  }
+
+  .upload-overlay p {
+    font-size: 12px;
+  }
+
+  .info-card {
+    padding: 12px 15px;
+  }
+
+  .info-card label {
+    font-size: 11px;
+  }
+
+  .info-value {
+    font-size: 14px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  .profile-picture-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+
+  .navbar h1 {
+    font-size: 18px;
+  }
+
+  .info-value {
+    font-size: 13px;
+  }
+}
