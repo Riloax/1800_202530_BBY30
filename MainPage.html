@@ -115,13 +115,54 @@
         <div class="switch-pill left"></div>
         <button class="active" data-type="personal">Personal</button>
         <button data-type="group">Group</button>
-
       </div>
 
     </div>
 
+    <div class="reminder-container">
+      <!-- Reminder list -->
+      <div id="reminder-list"></div>
+    </div>
 
-    <div class="reminder-content">
+    <!-- Sticky bar at bottom -->
+    <div class="reminder-add-bar">
+      <input type="text" id="reminder-search-bar" placeholder="Add a reminder..." readonly />
+    </div>
+
+    <!-- Popup form (hidden by default) -->
+    <div id="reminder-popup" class="popup-form hidden">
+      <form id="add-reminder-form">
+
+        <!-- Submit -->
+        <div class="form-main">
+          <!-- Title -->
+          <input type="text" id="reminder-title" placeholder="New reminder" required />
+          <button class="reminder-submit-btn" type="submit">+</button>
+        </div>
+        <hr>
+        <!-- Due date -->
+        <div class="form-row">
+          <label for="reminder-due">Due Date:</label>
+          <input type="date" id="reminder-due" />
+        </div>
+
+        <!-- Estimate -->
+        <div class="form-row">
+          <label for="reminder-estimate">Estimate (min):</label>
+          <input type="number" id="reminder-estimate" min="1" />
+        </div>
+
+        <!-- Category -->
+        <div class="form-row">
+          <label for="reminder-category">Category:</label>
+          <button type="button" id="reminder-category">Select</button>
+        </div>
+
+      </form>
+    </div>
+
+
+    <!-- <div class="reminder-content">
       <div class="reminder-category">
         <h3>Unschedule</h3>
         <ul>
@@ -145,7 +186,7 @@
         </ul>
       </div>
       <button class="add-rbtn">+</button>
-    </div>
+    </div> -->
   </section>
 
   <script type="module" src="MainPage.js"></script>
