@@ -12,6 +12,7 @@ import {
   query,
   where,
   onSnapshot,
+  orderBy,
 } from "firebase/firestore";
 
 // ============================================
@@ -627,4 +628,216 @@ document.addEventListener("DOMContentLoaded", function () {
       closeModal();
     }
   });
+});
+
+/* ============================================
+   REMINDER HEADER
+   ============================================ */
+
+const switchButtons = document.querySelectorAll(".reminder-switch button");
+const switchPill = document.querySelector(".switch-pill");
+
+switchButtons.forEach((btn, index) => {
+  btn.addEventListener("click", () => {
+    // update active button
+    switchButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    // move pill
+    if (index === 0) {
+      // Personal
+      switchPill.classList.remove("right");
+      switchPill.classList.add("left");
+    } else {
+      // Group
+      switchPill.classList.remove("left");
+      switchPill.classList.add("right");
+    }
+
+    // later you can use this to change content
+    const type = btn.dataset.type; // "group" or "personal"
+    console.log("Current reminder type:", type);
+  });
+});
+
+/* ============================================
+   REMINDER CONTENT
+   ============================================ */
+
+async function addReminder(
+  userId,
+  {
+    title,
+    dueDate = null,
+    estimate = null,
+    category = "",
+    priority = 3,
+    eventLink = null,
+  }
+) {
+  if (!title) return console.error("Title is required");
+  try {
+    const remindersRef = collection(db, "users", userId, "reminders");
+    await addDoc(remindersRef, {
+      title,
+      due_date: dueDate ? dueDate : null,
+      estimate_minutes: estimate,
+      category,
+      priority,
+      eventLink,
+      is_completed: false,
+      finished_at: null,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+    console.log("Reminder added!");
+  } catch (error) {
+    console.error("Error adding reminder:", error);
+  }
+}
+
+function listenUserReminders(userId, callback) {
+  const remindersRef = collection(db, "users", userId, "reminders");
+
+  // Optional: order by created_at descending
+  const q = query(remindersRef, orderBy("due_date", "asc"));
+
+  // Listen in real-time
+  onSnapshot(q, (snapshot) => {
+    const reminders = [];
+    snapshot.forEach((doc) => {
+      reminders.push({ id: doc.id, ...doc.data() });
+    });
+    callback(reminders); // pass the array to your UI renderer
+  });
+}
+
+async function toggleReminderCompleted(userId, reminderId, currentState) {
+  const reminderRef = doc(db, "users", userId, "reminders", reminderId);
+  await updateDoc(reminderRef, {
+    is_completed: !currentState,
+    finished_at: !currentState ? new Date() : null,
+    updated_at: new Date(),
+  });
+}
+
+function renderReminders(reminders) {
+  const listEl = document.getElementById("reminder-list");
+  listEl.innerHTML = "";
+
+  reminders.forEach((reminder) => {
+    // Card container
+    const card = document.createElement("div");
+    card.className = "reminder-card";
+
+    // Left: checkbox
+    const checkbox = document.createElement("div");
+    checkbox.className = "checkbox-circle";
+    if (reminder.is_completed) checkbox.classList.add("checked");
+
+    // Right: title + due date
+    const content = document.createElement("div");
+    content.className = "reminder-content";
+
+    const title = document.createElement("div");
+    title.className = "reminder-title";
+    title.textContent = reminder.title;
+
+    const due = document.createElement("div");
+    due.className = "reminder-due";
+    if (reminder.due_date) {
+      const date = reminder.due_date.toDate
+        ? reminder.due_date.toDate()
+        : new Date(reminder.due_date);
+      due.textContent = date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+    } else {
+      due.textContent = "";
+    }
+
+    content.appendChild(title);
+    content.appendChild(due);
+
+    // Combine checkbox + content
+    card.appendChild(checkbox);
+    card.appendChild(content);
+
+    // Click to toggle completion
+    card.addEventListener("click", () => {
+      toggleReminderCompleted(
+        auth.currentUser.uid,
+        reminder.id,
+        reminder.is_completed
+      );
+    });
+
+    listEl.appendChild(card);
+  });
+}
+
+// const form = document.getElementById("add-reminder-form");
+// form.addEventListener("submit", (e) => {
+//   e.preventDefault();
+//   const title = document.getElementById("reminder-title").value;
+//   addReminder(auth.currentUser.uid, { title });
+//   form.reset();
+// });
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("Logged in user:", user.uid);
+    listenUserReminders(user.uid, renderReminders);
+  } else {
+    console.log("No user logged in yet");
+  }
+});
+
+const searchBar = document.getElementById("reminder-search-bar");
+const popup = document.getElementById("reminder-popup");
+const titleInput = document.getElementById("reminder-title");
+const form = document.getElementById("add-reminder-form");
+
+// Show popup when search bar clicked
+searchBar.addEventListener("click", () => {
+  popup.classList.remove("hidden");
+  // Focus title input as soon as popup opens
+  setTimeout(() => {
+    titleInput.focus();
+  }, 0);
+});
+
+// Close popup when clicking outside the form
+document.addEventListener("click", (e) => {
+  if (!popup.contains(e.target) && e.target !== searchBar) {
+    popup.classList.add("hidden");
+  }
+});
+
+// Handle form submission
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const title = document.getElementById("reminder-title").value;
+  const dueDateValue = document.getElementById("reminder-due").value;
+  const estimateValue = document.getElementById("reminder-estimate").value;
+
+  const dueDate = dueDateValue ? new Date(dueDateValue) : null;
+  const estimate = estimateValue ? parseInt(estimateValue) : null;
+
+  // For now, category is just a placeholder string
+  const category = "General";
+
+  addReminder(auth.currentUser.uid, {
+    title,
+    dueDate,
+    estimate,
+    category,
+  });
+
+  form.reset();
+  popup.classList.add("hidden");
 });

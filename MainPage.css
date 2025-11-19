@@ -510,16 +510,272 @@ label {
   border-radius: 20px;
   padding: 20px;
   margin-top: 20px;
-  margin-bottom: 30px;
+  /* margin-bottom: 30px; */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 
-.reminder-section h2 {
-  margin-bottom: 10px;
+/* ============================================
+   REMINDER HEADER
+   ============================================ */
+.reminder-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
 }
 
-.reminder-box {
+.reminder-header {
+  position: relative;
+  display: flex;
+  gap: 5rem;
+  align-items: center;
+  padding: 0 0rem;
+  margin-bottom: 1rem;
+}
+
+.reminder-header h2 {
+  margin: 0;
+}
+
+.reminder-switch {
+  position: absolute;
+  left: 70%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0rem;
+  border-radius: 90px;
+  background-color: #f3f3f3;
+  overflow: hidden;
+}
+
+/* sliding pill background */
+.switch-pill {
+  position: absolute;
+  width: 55%; /* half of container minus padding */
+  height: 100%;
+  border-radius: 90px;
+  transition: transform 0.25s ease;
+  z-index: 0;
+}
+
+.reminder-switch button {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 0;
+  padding: 0.3rem 1.5rem;
+  border-radius: 90px;
+  font-size: 2rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: gray;
+}
+
+.reminder-switch button.active {
+  /* background-color: #333; */
+  color: white;
+  font-weight: 600;
+}
+
+.switch-pill.left {
+  transform: translateX(0%);
+  background-color: rgb(34, 205, 148);
+}
+
+.switch-pill.right {
+  transform: translateX(95%);
+  background-color: rgb(255, 142, 72);
+}
+
+/* ============================================
+   REMINDER CONTENT
+   ============================================ */
+/* Container for all reminders */
+.reminder-container {
+  position: relative;
+  margin-top: 16px;
+}
+
+#reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Individual reminder card */
+.reminder-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem 16px;
+  margin: 0.1rem;
+  border-radius: 12px;
+  background-color: #f5f5f5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reminder-card:hover {
+  background-color: rgb(147, 210, 189);
+}
+
+/* Circle checkbox */
+.checkbox-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #888;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+/* Check mark inside the circle */
+.checkbox-circle.checked {
+  background-color: rgb(34, 205, 148);
+  border-color: rgb(34, 205, 148);
+}
+
+.checkbox-circle.checked::after {
+  content: "✓";
+  color: white;
+  font-size: 1rem;
+  font-weight: bolder;
+}
+
+.reminder-content {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+}
+
+/* Reminder title */
+.reminder-title {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Due date on the right */
+.reminder-due {
+  font-size: 14px;
+  color: #7e7e7e;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ============================================
+   REMINDER SEARCH BAR
+   ============================================ */
+
+/* Sticky bar at bottom of viewport while inside section */
+.reminder-add-bar {
+  position: sticky;
+  bottom: 0;
+  background-color: transparent;
+  padding: 20px 0px;
+  margin: 0.5rem;
+}
+
+/* The input that looks like a search bar */
+#reminder-search-bar {
+  width: 90%;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+/* Popup form */
+.popup-form {
+  position: absolute;
+  bottom: 0px; /* adjust based on your layout */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  z-index: 100;
+  width: 90%;
+}
+
+.hidden {
+  display: none;
+}
+
+.form-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-row label {
+  font-size: 14px;
+}
+
+.form-row button {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Actions row: right align */
+.form-main {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  display: flex;
+  align-items: center;
+}
+
+.form-main input {
+  padding: 0px 8px;
+  border-radius: 6px;
+  border: none;
+  width: 90%;
+  height: 5vh;
+  margin-right: 1rem;
+  font-size: 1.2rem;
+}
+
+.form-main input:focus {
+  border: none;
+  outline: none;
+}
+
+/* Circle submit button */
+.reminder-submit-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background-color: rgb(34, 205, 148);
+  color: white;
+  font-size: 20px;
+  line-height: 0; /* avoid weird text vertical centering */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s ease, box-shadow 0.1s ease,
+    background-color 0.1s ease;
+}
+
+.reminder-submit-btn:hover {
+  background-color: rgb(27, 166, 120);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* ====================================
+
+.reminder-content {
   background-color: #f8f8f8;
   border-radius: 15px;
   padding: 15px;
@@ -569,7 +825,7 @@ label {
 
 .add-rbtn:hover {
   background-color: #444;
-}
+} */
 
 /* ============================================
    ANIMATIONS
@@ -787,7 +1043,7 @@ label {
     font-size: 18px;
   }
 
-  .reminder-box {
+  .reminder-content {
     padding: 10px;
   }
 
