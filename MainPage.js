@@ -41,6 +41,7 @@ let startX = 0;
 let startY = 0;
 let currentX = 0;
 let currentY = 0;
+let autoScrollInterval = null;
 
 // Firestore real-time listener
 let unsubscribe = null;
@@ -56,6 +57,7 @@ let unsubscribe = null;
  */
 function getMonday(d) {
   d = new Date(d);
+  d.setHours(12, 0, 0, 0);
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(d.setDate(diff));
@@ -95,28 +97,31 @@ function updateWeekDisplay() {
     const dayEl = document.getElementById(`day${i}`);
 
     const [year, month, day] = date.split("-").map(Number);
-    const dateObj = new Date(year, month - 1, day);
+    // Fix timezone issue by using UTC
+    const dateObj = new Date(Date.UTC(year, month - 1, day));
 
     dayEl.innerHTML = `${
       dayNames[i]
-    }<br><span style="font-size: 12px; font-weight: normal;">${dateObj.getDate()}/${
-      dateObj.getMonth() + 1
+    }<br><span style="font-size: 12px; font-weight: normal;">${dateObj.getUTCDate()}/${
+      dateObj.getUTCMonth() + 1
     }</span>`;
   });
 
   // Update week range display
   const [year1, month1, day1] = weekDates[0].split("-").map(Number);
   const [year2, month2, day2] = weekDates[6].split("-").map(Number);
-  const firstDate = new Date(year1, month1 - 1, day1);
-  const lastDate = new Date(year2, month2 - 1, day2);
+  const firstDate = new Date(Date.UTC(year1, month1 - 1, day1));
+  const lastDate = new Date(Date.UTC(year2, month2 - 1, day2));
 
   document.getElementById(
     "weekDisplay"
-  ).textContent = `${firstDate.getDate()} ${firstDate.toLocaleString("en", {
+  ).textContent = `${firstDate.getUTCDate()} ${firstDate.toLocaleString("en", {
     month: "short",
-  })} - ${lastDate.getDate()} ${lastDate.toLocaleString("en", {
+    timeZone: "UTC",
+  })} - ${lastDate.getUTCDate()} ${lastDate.toLocaleString("en", {
     month: "short",
-  })} ${lastDate.getFullYear()}`;
+    timeZone: "UTC",
+  })} ${lastDate.getUTCFullYear()}`;
 }
 
 /**
@@ -130,12 +135,17 @@ function changeWeek(offset) {
 }
 
 /**
- * Initialize the calendar grid (24 hours x 7 days)
+ * Initialize the calendar grid (24 hours x 7 days, starting from 6 AM)
  */
 function initCalendar() {
   const calendarBody = document.getElementById("calendarBody");
 
-  for (let hour = 0; hour < 24; hour++) {
+  // Create hours array: 6-23, then 0-5
+  const hours = [...Array(18).keys()]
+    .map((i) => i + 6)
+    .concat([...Array(6).keys()]);
+
+  hours.forEach((hour) => {
     const row = document.createElement("div");
     row.className = "calendar-row";
 
@@ -155,9 +165,15 @@ function initCalendar() {
     }
 
     calendarBody.appendChild(row);
-  }
+  });
 
   updateWeekDisplay();
+
+  // Scroll to 6 AM (top of the schedule)
+  const scheduleBox = document.querySelector(".schedule-box");
+  if (scheduleBox) {
+    scheduleBox.scrollTop = 0;
+  }
 }
 
 // ============================================
@@ -181,6 +197,38 @@ function shouldShowTask(category) {
 function updateCategoryFilter(category, isChecked) {
   categoryFilters[category] = isChecked;
   renderTasks();
+}
+
+// ============================================
+// Notification Functions
+// ============================================
+
+/**
+ * Show a notification message to the user
+ * @param {string} message - Message to display
+ * @param {string} type - Type of notification ('success', 'error', 'info')
+ */
+function showNotification(message, type = "success") {
+  // Create notification element
+  const notification = document.createElement("div");
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+
+  // Add to body
+  document.body.appendChild(notification);
+
+  // Trigger animation
+  setTimeout(() => {
+    notification.classList.add("show");
+  }, 10);
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove("show");
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 3000);
 }
 
 // ============================================
@@ -271,6 +319,7 @@ function handleDragMove(x, y) {
     dragClone.style.opacity = "0.8";
     dragClone.style.zIndex = "10000";
     dragClone.style.width = draggedElement.offsetWidth + "px";
+    dragClone.style.height = draggedElement.offsetHeight + "px";
     dragClone.style.cursor = "grabbing";
     dragClone.style.transform = "scale(1.05)";
     document.body.appendChild(dragClone);
@@ -283,6 +332,46 @@ function handleDragMove(x, y) {
     // Move clone to follow cursor
     dragClone.style.left = x - draggedElement.offsetWidth / 2 + "px";
     dragClone.style.top = y - 20 + "px";
+
+    // Auto-scroll functionality
+    const scheduleBox = document.querySelector(".schedule-box");
+    if (scheduleBox) {
+      const rect = scheduleBox.getBoundingClientRect();
+      const scrollThreshold = 50; // pixels from edge to trigger scroll
+      const scrollSpeed = 10; // pixels per interval
+
+      // Clear existing interval
+      if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+      }
+
+      // Check if near top edge
+      if (y - rect.top < scrollThreshold && y > rect.top) {
+        autoScrollInterval = setInterval(() => {
+          scheduleBox.scrollTop -= scrollSpeed;
+        }, 20);
+      }
+      // Check if near bottom edge
+      else if (rect.bottom - y < scrollThreshold && y < rect.bottom) {
+        autoScrollInterval = setInterval(() => {
+          scheduleBox.scrollTop += scrollSpeed;
+        }, 20);
+      }
+
+      // Check if near left edge
+      else if (x - rect.left < scrollThreshold && x > rect.left) {
+        autoScrollInterval = setInterval(() => {
+          scheduleBox.scrollLeft -= scrollSpeed;
+        }, 20);
+      }
+      // Check if near right edge
+      else if (rect.right - x < scrollThreshold && x < rect.right) {
+        autoScrollInterval = setInterval(() => {
+          scheduleBox.scrollLeft += scrollSpeed;
+        }, 20);
+      }
+    }
 
     // Find cell under cursor
     const elements = document.elementsFromPoint(x, y);
@@ -338,22 +427,80 @@ async function finishDrag() {
       const hour = parseInt(dayCell.dataset.hour);
 
       const newDate = weekDates[dayIndex];
-      const newTime = `${hour.toString().padStart(2, "0")}:00`;
+
+      // Use the exact hour from the cell (no minute offset calculation)
+      const oldStartTime = draggedTask.startTime || draggedTask.time;
+      const oldStartMinute = parseInt(oldStartTime.split(":")[1]) || 0;
+
+      // Keep the same minutes as the original task
+      const newStartTime = `${hour.toString().padStart(2, "0")}:${oldStartMinute
+        .toString()
+        .padStart(2, "0")}`;
+
+      // Calculate end time based on duration
+      const oldEndTime = draggedTask.time;
+
+      // Validate that old times exist
+      if (!oldStartTime || !oldEndTime) {
+        console.error("Task missing time information for drag operation");
+        cleanupDrag();
+        return;
+      }
+
+      // Calculate duration in minutes
+      const oldStartParts = oldStartTime.split(":");
+      const oldEndParts = oldEndTime.split(":");
+      const oldStartMinutes =
+        parseInt(oldStartParts[0]) * 60 + parseInt(oldStartParts[1]);
+      const oldEndMinutes =
+        parseInt(oldEndParts[0]) * 60 + parseInt(oldEndParts[1]);
+      let durationMinutes = oldEndMinutes - oldStartMinutes;
+
+      // Handle next day scenario
+      if (durationMinutes < 0) {
+        durationMinutes += 24 * 60;
+      }
+
+      // Calculate new end time
+      const newStartMinutes = hour * 60 + oldStartMinute;
+      const newEndMinutes = newStartMinutes + durationMinutes;
+      const newEndHour = Math.floor(newEndMinutes / 60) % 24;
+      const newEndMinute = newEndMinutes % 60;
+      const newEndTime = `${newEndHour
+        .toString()
+        .padStart(2, "0")}:${newEndMinute.toString().padStart(2, "0")}`;
 
       // Update in Firestore if date/time changed
-      if (draggedTask.date !== newDate || draggedTask.time !== newTime) {
+      if (
+        draggedTask.date !== newDate ||
+        draggedTask.startTime !== newStartTime
+      ) {
         try {
           const taskRef = doc(db, "tasks", draggedTask.firestoreId);
           await updateDoc(taskRef, {
             date: newDate,
-            time: newTime,
+            startTime: newStartTime,
+            time: newEndTime,
           });
         } catch (error) {
           console.error("Error updating task:", error);
-          alert("Failed to update task");
+          showNotification("Failed to update task", "error");
         }
       }
     }
+  }
+
+  cleanupDrag();
+}
+
+/**
+ * Cleanup drag elements and state
+ */
+function cleanupDrag() {
+  // Clear auto-scroll interval
+  if (autoScrollInterval) {
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = null;
   }
 
   // Cleanup
@@ -393,63 +540,159 @@ function closeModal() {
 // ============================================
 
 /**
+ * Calculate the height of task based on duration (in minutes precision)
+ * @param {string} startTime - Start time in HH:mm format
+ * @param {string} endTime - End time in HH:mm format
+ * @returns {number} - Duration in hours (decimal)
+ */
+function calculateDuration(startTime, endTime) {
+  // Validate inputs
+  if (
+    !startTime ||
+    !endTime ||
+    typeof startTime !== "string" ||
+    typeof endTime !== "string"
+  ) {
+    console.warn(
+      "Invalid time format in calculateDuration:",
+      startTime,
+      endTime
+    );
+    return 1; // Default to 1 hour
+  }
+
+  const startParts = startTime.split(":");
+  const endParts = endTime.split(":");
+
+  if (startParts.length < 2 || endParts.length < 2) {
+    console.warn(
+      "Invalid time format in calculateDuration:",
+      startTime,
+      endTime
+    );
+    return 1; // Default to 1 hour
+  }
+
+  const startHour = parseInt(startParts[0]);
+  const startMinute = parseInt(startParts[1]) || 0;
+  const endHour = parseInt(endParts[0]);
+  const endMinute = parseInt(endParts[1]) || 0;
+
+  // Convert to total minutes
+  const startTotalMinutes = startHour * 60 + startMinute;
+  let endTotalMinutes = endHour * 60 + endMinute;
+
+  // Handle next day scenario (e.g., 23:00 to 02:00)
+  if (endTotalMinutes < startTotalMinutes) {
+    endTotalMinutes += 24 * 60; // Add 24 hours
+  }
+
+  const durationMinutes = endTotalMinutes - startTotalMinutes;
+  const durationHours = durationMinutes / 60;
+
+  // Ensure minimum duration of 5 minutes (0.083 hours)
+  return durationHours > 0.083 ? durationHours : 0.083;
+}
+
+/**
  * Render all tasks on the calendar
  */
+/**
+ * Render all tasks on the calendar
+ * FIXED: Uses Percentage (%) instead of Pixels for responsiveness
+ */
 function renderTasks() {
-  // Remove all existing task elements
+  // Remove all existing task elements & overlays
   document.querySelectorAll(".task-item").forEach((item) => item.remove());
+  document.querySelectorAll(".task-overlay").forEach((item) => item.remove());
 
   tasks.forEach((task) => {
+    // Skip if invalid
+    if (!task.date || !task.time) return;
+
     const dayIndex = weekDates.indexOf(task.date);
 
     if (dayIndex !== -1) {
-      const hour = parseInt(task.time.split(":")[0]);
+      // Data preparation
+      const startTime = task.startTime || task.time;
+      const endTime = task.time;
 
-      const cell = document.querySelector(
-        `.day-cell[data-day-index="${dayIndex}"][data-hour="${hour}"]`
+      const startHour = parseInt(startTime.split(":")[0]);
+      const startMinute = parseInt(startTime.split(":")[1]) || 0;
+
+      let endHour = parseInt(endTime.split(":")[0]);
+      let endMinute = parseInt(endTime.split(":")[1]) || 0;
+
+      if (task.startTime && task.startTime === task.time) {
+        endHour = startHour + 1;
+      }
+
+      const startCell = document.querySelector(
+        `.day-cell[data-day-index="${dayIndex}"][data-hour="${startHour}"]`
       );
 
-      if (cell) {
+      if (startCell) {
+        // 1. Calculate Duration in Minutes
+        const startTotalMinutes = startHour * 60 + startMinute;
+        let endTotalMinutes = endHour * 60 + endMinute;
+
+        if (endTotalMinutes <= startTotalMinutes) endTotalMinutes += 24 * 60;
+
+        const durationMinutes = endTotalMinutes - startTotalMinutes;
+
+        const heightPercentage = (durationMinutes / 60) * 100;
+
+        const topPercentage = (startMinute / 60) * 100;
+
+        // -------------------------
+
+        // Create Task Element
         const taskItem = document.createElement("div");
         taskItem.className = "task-item";
-        taskItem.dataset.category = task.category || "study"; // Default to study if no category
+        taskItem.dataset.category = task.category || "study";
 
-        // Apply visibility based on category filter
         if (!shouldShowTask(task.category || "study")) {
           taskItem.classList.add("hidden");
         }
 
+        taskItem.style.position = "absolute";
+
+        taskItem.style.top = `${topPercentage}%`;
+
+        taskItem.style.left = "0";
+        taskItem.style.width = "100%";
+
+        taskItem.style.height = `${heightPercentage}%`;
+
+        taskItem.style.zIndex = "10";
+        taskItem.style.boxSizing = "border-box";
+
+        const timeDisplay = `${startTime} - ${endTime}`;
+
         taskItem.innerHTML = `
           <div class="task-name">${task.name}</div>
-          <div class="task-time">${task.time}</div>
+          <div class="task-time">${timeDisplay}</div>
           <button class="task-delete">×</button>
         `;
 
-        // Add drag event listeners (both mouse and touch)
-        taskItem.addEventListener("mousedown", (e) => {
-          handleMouseDown(e, task, taskItem);
-        });
-
+        taskItem.addEventListener("mousedown", (e) =>
+          handleMouseDown(e, task, taskItem)
+        );
         taskItem.addEventListener(
           "touchstart",
-          (e) => {
-            handleMouseDown(e, task, taskItem);
-          },
+          (e) => handleMouseDown(e, task, taskItem),
           { passive: false }
         );
 
-        // Delete button handler
         taskItem
           .querySelector(".task-delete")
           .addEventListener("click", (e) => {
             e.stopPropagation();
-            e.preventDefault();
-            if (confirm(`Delete task "${task.name}"?`)) {
+            if (confirm(`Delete task "${task.name}"?`))
               deleteTask(task.firestoreId);
-            }
           });
 
-        cell.appendChild(taskItem);
+        startCell.appendChild(taskItem);
       }
     }
   });
@@ -464,9 +707,10 @@ async function deleteTask(firestoreId) {
 
   try {
     await deleteDoc(doc(db, "tasks", firestoreId));
+    showNotification("Task deleted successfully", "success");
   } catch (error) {
     console.error("Error deleting task:", error);
-    alert("Failed to delete task");
+    showNotification("Failed to delete task", "error");
   }
 }
 
@@ -595,29 +839,50 @@ document.addEventListener("DOMContentLoaded", function () {
       e.preventDefault();
 
       if (!currentUser) {
-        alert("Please login first");
+        showNotification("Please login first", "error");
         return;
       }
 
       const taskName = document.getElementById("taskName").value;
       const taskCategory = document.getElementById("taskCategory").value;
       const taskDate = document.getElementById("taskDate").value;
+      const taskStartTime = document.getElementById("taskStartTime").value;
       const taskTime = document.getElementById("taskTime").value;
 
+      // If end time is provided, validate that it's after start time
+      if (taskTime) {
+        const startHour = parseInt(taskStartTime.split(":")[0]);
+        const startMinute = parseInt(taskStartTime.split(":")[1]);
+        const endHour = parseInt(taskTime.split(":")[0]);
+        const endMinute = parseInt(taskTime.split(":")[1]);
+
+        if (
+          endHour < startHour ||
+          (endHour === startHour && endMinute <= startMinute)
+        ) {
+          showNotification("End time must be after start time", "error");
+          return;
+        }
+      }
+
       try {
-        await addDoc(collection(db, "tasks"), {
+        const taskData = {
           userId: currentUser.uid,
           name: taskName,
           category: taskCategory,
           date: taskDate,
-          time: taskTime,
+          startTime: taskStartTime,
+          time: taskTime || taskStartTime, // Use startTime as fallback if no end time
           createdAt: new Date(),
-        });
+        };
 
+        await addDoc(collection(db, "tasks"), taskData);
+
+        showNotification("Task added successfully!", "success");
         closeModal();
       } catch (error) {
         console.error("Error adding task:", error);
-        alert("Failed to add task");
+        showNotification("Failed to add task", "error");
       }
     });
 
@@ -777,14 +1042,6 @@ function renderReminders(reminders) {
     listEl.appendChild(card);
   });
 }
-
-// const form = document.getElementById("add-reminder-form");
-// form.addEventListener("submit", (e) => {
-//   e.preventDefault();
-//   const title = document.getElementById("reminder-title").value;
-//   addReminder(auth.currentUser.uid, { title });
-//   form.reset();
-// });
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
