@@ -18,6 +18,45 @@ body {
 }
 
 /* ============================================
+   NOTIFICATION STYLES
+   ============================================ */
+
+.notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.3s ease;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-success {
+  background-color: #4caf50;
+  color: white;
+}
+
+.notification-error {
+  background-color: #f44336;
+  color: white;
+}
+
+.notification-info {
+  background-color: #2196f3;
+  color: white;
+}
+
+/* ============================================
    NAVIGATION BAR
    ============================================ */
 
@@ -168,10 +207,10 @@ label {
   border-radius: 15px;
   padding: 20px;
   position: relative;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
   overflow-y: auto;
   max-height: 600px;
-  touch-action: pan-y;
+  touch-action: pan-y pan-x;
 }
 
 /* ============================================
@@ -193,8 +232,8 @@ label {
   font-weight: bold;
   position: sticky;
   top: 0;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .time-column,
@@ -243,17 +282,14 @@ label {
 
 /* Day Cells */
 .day-cell {
-  padding: 5px;
+  padding: 0;
   border-right: 1px solid #e0e0e0;
   min-height: 60px;
-  max-height: none !important;
-  height: auto;
   position: relative;
   transition: background-color 0.2s;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
   overflow: visible;
+  box-sizing: border-box;
+  display: block;
 }
 
 .day-cell:hover {
@@ -269,24 +305,31 @@ label {
   border: 2px dashed #2196f3;
 }
 
+/* Task overlay to hide grid lines */
+.task-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  z-index: 1;
+  pointer-events: none;
+}
+
 /* ============================================
    TASK ITEMS WITH CATEGORY COLORS
    ============================================ */
 
 .task-item {
   color: white;
-  border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 11px;
-  position: relative;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
   cursor: move;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s, box-shadow 0.2s;
-  width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
-  min-height: fit-content;
-  height: auto;
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
@@ -294,6 +337,26 @@ label {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Fixed size task (no end time) */
+.task-item-fixed {
+  padding: 8px 10px;
+  justify-content: center;
+  gap: 2px;
+}
+
+.task-item-fixed .task-name {
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.task-item-fixed .task-time {
+  font-size: 10px;
 }
 
 /* Category Colors */
@@ -337,10 +400,10 @@ label {
 /* Task Name */
 .task-name {
   font-weight: bold;
-  font-size: 10px;
-  margin-bottom: 2px;
-  padding-right: 20px;
-  line-height: 1.3;
+  font-size: 13px;
+  margin-bottom: 4px;
+  padding-right: 25px;
+  line-height: 1.4;
   max-width: 100%;
   white-space: normal !important;
   overflow: visible !important;
@@ -350,25 +413,26 @@ label {
 
 /* Task Time */
 .task-time {
-  font-size: 9px;
-  opacity: 0.9;
+  font-size: 11px;
+  opacity: 0.95;
   white-space: nowrap;
   pointer-events: none;
+  margin-top: auto;
 }
 
 /* Delete Button */
 .task-delete {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 4px;
+  right: 4px;
   background-color: rgba(255, 255, 255, 0.3);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
   padding: 0;
   display: flex;
@@ -376,10 +440,11 @@ label {
   justify-content: center;
   transition: background-color 0.2s;
   flex-shrink: 0;
+  z-index: 20;
 }
 
 .task-delete:hover {
-  background-color: rgba(255, 68, 68, 0.8);
+  background-color: rgba(255, 68, 68, 0.9);
 }
 
 /* ============================================
@@ -773,60 +838,6 @@ label {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
 }
 
-/* ====================================
-
-.reminder-content {
-  background-color: #f8f8f8;
-  border-radius: 15px;
-  padding: 15px;
-  position: relative;
-}
-
-.reminder-category {
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-}
-
-.reminder-category h3 {
-  margin: 5px 0;
-  font-size: 16px;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 5px;
-}
-
-.reminder-category ul {
-  list-style-type: none;
-  padding-left: 15px;
-  margin: 5px 0;
-}
-
-.reminder-category li {
-  padding: 3px 0;
-}
-
-.add-rbtn {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
-  background-color: #222;
-  color: #fff;
-  font-size: 28px;
-  border: none;
-  border-radius: 50%;
-  width: 45px;
-  height: 45px;
-  cursor: pointer;
-  transition: background 0.3s;
-  z-index: 100;
-}
-
-.add-rbtn:hover {
-  background-color: #444;
-} */
-
 /* ============================================
    ANIMATIONS
    ============================================ */
@@ -857,7 +868,7 @@ label {
    RESPONSIVE DESIGN
    ============================================ */
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 769px) {
   .calendar-container {
     min-width: 100%;
   }
@@ -949,6 +960,7 @@ label {
     overflow-x: auto !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
   }
 
   .calendar-container {
@@ -1070,6 +1082,14 @@ label {
     font-size: 26px;
     bottom: 15px;
     right: 15px;
+  }
+
+  .notification {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    font-size: 13px;
+    padding: 12px 20px;
   }
 }
 

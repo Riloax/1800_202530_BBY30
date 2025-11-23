@@ -31,13 +31,22 @@ body {
 }
 
 .back-btn {
-  background: none;
-  border: none;
-  font-size: 18px;
+  position: static;
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  background: white;
+  border: 2px solid #858585;
+  border-radius: 50px;
+  color: #515151;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  color: #222;
-  padding: 5px 10px;
-  transition: color 0.3s;
+  transition: all 0.3s;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .back-btn:hover {
