@@ -3,48 +3,47 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Todo Together</title>
+    <title>Welcome | ToDo Together</title>
     <link rel="stylesheet" href="styles/style.css" />
   </head>
-
   <body>
-    <nav class="navbar">
-      <h1 class="logo">Todo Together</h1>
+    <header class="hero">
+      <h1>ToDo Together</h1>
+      <p class="tagline">Plan smarter. Work together. Stay on track.</p>
 
-      <!-- icons container with images -->
-      <div class="icons">
-        <img
-          src="https://www.freeiconspng.com/thumbs/search-icon-png/search-icon-png-5.png"
-          alt="Search icon"
-          class="icon"
-        />
-        <img
-          src="https://static.thenounproject.com/png/1524589-200.png"
-          alt="Settings icon"
-          class="icon"
-        />
+      <div class="hero-buttons">
+        <a href="Login.html" class="btn primary">Log In</a>
+        <a href="Login.html" class="btn secondary">Sign Up</a>
       </div>
-    </nav>
+    </header>
 
-    <div id="main-image">
-      <img src="images/main.jpg" height="200px" />
-    </div>
+    <section class="features">
+      <h2>Core Features</h2>
 
-    <div>
-      <button id="login-button" class="basic-button">Login</button>
-    </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>📅 Smart Weekly Planner</h3>
+          <p>
+            Organize your entire week visually with a clean drag-and-drop
+            scheduler.
+          </p>
+        </div>
 
-    <div>
-      <button id="service-button" class="basic-button">Terms of service</button>
-    </div>
+        <div class="feature-card">
+          <h3>⏰ Reminders & Alerts</h3>
+          <p>Never forget deadlines or meetings with built-in reminders.</p>
+        </div>
 
-    <script>
-      // Go login page when click on login button
-      document
-        .getElementById("login-button")
-        .addEventListener("click", function () {
-          window.location.href = "login.html";
-        });
-    </script>
+        <div class="feature-card">
+          <h3>👥 Team Collaboration</h3>
+          <p>Share schedules, tasks, and updates with your team instantly.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>⚙️ Personal Dashboard</h3>
+          <p>Your own hub to manage tasks, profile, and daily workflow.</p>
+        </div>
+      </div>
+    </section>
   </body>
 </html>
