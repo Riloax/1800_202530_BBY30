@@ -11,7 +11,7 @@
     <!-- Top Navbar -->
     <nav class="navbar">
       <button class="burger" id="burger-btn">&#9776;</button>
-      <input type="text" placeholder="Search" class="search-bar" />
+      <h1>ToDo-Together</h1>
     </nav>
 
     <!-- Dropdown Menu -->
@@ -141,6 +141,104 @@
             <button type="submit" class="modal-btn save-btn">Save Task</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Groups Section -->
+    <section class="groups-section">
+      <h2>My Groups</h2>
+      <div class="groups-actions">
+        <button class="group-action-btn" id="createGroupBtn">
+          + Create Group
+        </button>
+        <button class="group-action-btn" id="joinGroupBtn">Join Group</button>
+      </div>
+      <div class="groups-list" id="groupsList">
+        <!-- Groups will be rendered here -->
+      </div>
+    </section>
+
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">Create New Group</div>
+        <form id="createGroupForm">
+          <div class="form-group">
+            <label for="groupName">Group Name</label>
+            <input
+              type="text"
+              id="groupName"
+              placeholder="Enter group name"
+              required
+            />
+          </div>
+          <div class="modal-buttons">
+            <button
+              type="button"
+              class="modal-btn cancel-btn"
+              id="cancelCreateGroupBtn"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="modal-btn save-btn">
+              Create Group
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Join Group Modal -->
+    <div id="joinGroupModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">Join a Group</div>
+        <form id="joinGroupForm">
+          <div class="form-group">
+            <label for="groupCode">Group Code</label>
+            <input
+              type="text"
+              id="groupCode"
+              placeholder="Enter 8-character code"
+              maxlength="8"
+              required
+            />
+          </div>
+          <div class="modal-buttons">
+            <button
+              type="button"
+              class="modal-btn cancel-btn"
+              id="cancelJoinGroupBtn"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="modal-btn save-btn">Join Group</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Group Details Modal -->
+    <div id="groupDetailsModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header" id="groupDetailsTitle">Group Details</div>
+        <div class="group-details-content">
+          <div class="detail-row">
+            <strong>Invite Code:</strong>
+            <div class="code-container">
+              <span id="groupCodeDisplay"></span>
+              <button class="copy-btn" id="copyCodeBtn">📋 Copy</button>
+            </div>
+          </div>
+          <div class="detail-row">
+            <strong>Members:</strong>
+            <div id="groupMembersList"></div>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button class="modal-btn cancel-btn" id="closeGroupDetailsBtn">
+            Close
+          </button>
+        </div>
       </div>
     </div>
 
