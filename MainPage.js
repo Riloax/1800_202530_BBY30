@@ -13,6 +13,9 @@ import {
   where,
   onSnapshot,
   orderBy,
+  setDoc,
+  getDoc,
+  getDocs,
 } from "firebase/firestore";
 
 // ============================================
@@ -23,6 +26,8 @@ let currentUser = null;
 let tasks = [];
 let currentWeekOffset = 0;
 let weekDates = [];
+let userGroups = [];
+let groupsUnsubscribe = null;
 
 // Category filter state (all enabled by default)
 let categoryFilters = {
@@ -750,6 +755,264 @@ function loadTasks() {
 }
 
 // ============================================
+// Group Functions
+// ============================================
+
+/**
+ * Generate a unique shareable group code
+ */
+function generateGroupCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+/**
+ * Create a new group
+ */
+async function createGroup(groupName) {
+  if (!auth.currentUser) {
+    showNotification("Please login first", "error");
+    return null;
+  }
+
+  try {
+    const groupCode = generateGroupCode();
+
+    const groupData = {
+      name: groupName,
+      code: groupCode,
+      createdBy: auth.currentUser.uid,
+      createdAt: new Date(),
+      members: [auth.currentUser.uid],
+      memberDetails: {
+        [auth.currentUser.uid]: {
+          email: auth.currentUser.email,
+          joinedAt: new Date(),
+          role: "owner",
+        },
+      },
+    };
+
+    const groupRef = await addDoc(collection(db, "groups"), groupData);
+
+    // Add group reference to user's document
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const currentGroups = userDoc.data().groups || [];
+      await updateDoc(userRef, {
+        groups: [...currentGroups, groupRef.id],
+      });
+    }
+
+    showNotification("Group created successfully!", "success");
+    return { id: groupRef.id, code: groupCode };
+  } catch (error) {
+    console.error("Error creating group:", error);
+    showNotification("Failed to create group", "error");
+    return null;
+  }
+}
+
+/**
+ * Join a group using invite code
+ */
+async function joinGroup(groupCode) {
+  if (!auth.currentUser) {
+    showNotification("Please login first", "error");
+    return false;
+  }
+
+  try {
+    // Find group by code
+    const groupsRef = collection(db, "groups");
+    const q = query(groupsRef, where("code", "==", groupCode.toUpperCase()));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      showNotification("Invalid group code", "error");
+      return false;
+    }
+
+    const groupDoc = snapshot.docs[0];
+    const groupData = groupDoc.data();
+
+    // Check if already a member
+    if (groupData.members.includes(auth.currentUser.uid)) {
+      showNotification("You are already in this group", "info");
+      return false;
+    }
+
+    // Add user to group
+    await updateDoc(doc(db, "groups", groupDoc.id), {
+      members: [...groupData.members, auth.currentUser.uid],
+      [`memberDetails.${auth.currentUser.uid}`]: {
+        email: auth.currentUser.email,
+        joinedAt: new Date(),
+        role: "member",
+      },
+    });
+
+    // Add group to user's document
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const currentGroups = userDoc.data().groups || [];
+      await updateDoc(userRef, {
+        groups: [...currentGroups, groupDoc.id],
+      });
+    }
+
+    showNotification("Successfully joined the group!", "success");
+    return true;
+  } catch (error) {
+    console.error("Error joining group:", error);
+    showNotification("Failed to join group", "error");
+    return false;
+  }
+}
+
+/**
+ * Listen to user's groups in real-time
+ */
+function listenUserGroups(userId, callback) {
+  const groupsRef = collection(db, "groups");
+  const q = query(groupsRef, where("members", "array-contains", userId));
+
+  return onSnapshot(q, (snapshot) => {
+    const groups = [];
+    snapshot.forEach((doc) => {
+      groups.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+    callback(groups);
+  });
+}
+
+/**
+ * Render user's groups
+ */
+function renderGroups(groups) {
+  const groupsList = document.getElementById("groupsList");
+
+  if (!groupsList) return;
+
+  groupsList.innerHTML = "";
+
+  if (groups.length === 0) {
+    groupsList.innerHTML =
+      '<p style="color: #666; text-align: center; padding: 20px;">No groups yet. Create or join a group!</p>';
+    return;
+  }
+
+  groups.forEach((group) => {
+    const groupCard = document.createElement("div");
+    groupCard.className = "group-card";
+
+    const isOwner = group.createdBy === currentUser.uid;
+    const memberCount = group.members ? group.members.length : 0;
+
+    groupCard.innerHTML = `
+      <div class="group-card-header">
+        <div class="group-name">${group.name}</div>
+        <div class="group-role">${isOwner ? "Owner" : "Member"}</div>
+      </div>
+      <div class="group-info">
+        <span class="group-members-count">👥 ${memberCount} member${
+      memberCount !== 1 ? "s" : ""
+    }</span>
+      </div>
+    `;
+
+    groupCard.addEventListener("click", () => openGroupDetails(group));
+    groupsList.appendChild(groupCard);
+  });
+}
+
+/**
+ * Open group details modal
+ */
+function openGroupDetails(group) {
+  const modal = document.getElementById("groupDetailsModal");
+  const title = document.getElementById("groupDetailsTitle");
+  const codeDisplay = document.getElementById("groupCodeDisplay");
+  const membersList = document.getElementById("groupMembersList");
+
+  title.textContent = group.name;
+  codeDisplay.textContent = group.code;
+
+  // Render members
+  membersList.innerHTML = "";
+  if (group.memberDetails) {
+    Object.entries(group.memberDetails).forEach(([userId, details]) => {
+      const memberItem = document.createElement("div");
+      memberItem.className = "member-item";
+      memberItem.textContent = `${details.email} ${
+        details.role === "owner" ? "(Owner)" : ""
+      }`;
+      membersList.appendChild(memberItem);
+    });
+  }
+
+  modal.style.display = "block";
+}
+
+/**
+ * Initialize user's groups listener
+ */
+function initGroupsListener() {
+  if (!currentUser) return;
+
+  // Unsubscribe from previous listener
+  if (groupsUnsubscribe) {
+    groupsUnsubscribe();
+  }
+
+  groupsUnsubscribe = listenUserGroups(currentUser.uid, (groups) => {
+    userGroups = groups;
+    renderGroups(groups);
+  });
+}
+
+/**
+ * Check URL for join code and auto-join
+ */
+async function checkJoinCode() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const joinCode = urlParams.get("join");
+
+  if (joinCode && currentUser) {
+    await joinGroup(joinCode);
+    // Remove join parameter from URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+/**
+ * Ensure user document exists in Firestore
+ */
+async function ensureUserDocument(user) {
+  const userRef = doc(db, "users", user.uid);
+  const userDoc = await getDoc(userRef);
+
+  if (!userDoc.exists()) {
+    await setDoc(userRef, {
+      email: user.email,
+      createdAt: new Date(),
+      groups: [],
+    });
+  }
+}
+
+// ============================================
 // Authentication Functions
 // ============================================
 
@@ -775,16 +1038,117 @@ document.addEventListener("DOMContentLoaded", function () {
   initCalendar();
 
   // Check authentication state
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
       console.log("User logged in:", user.email);
+
+      // Ensure user document exists
+      await ensureUserDocument(user);
+
+      // Load tasks and groups
       loadTasks();
+      initGroupsListener();
+
+      // Check for join code in URL
+      await checkJoinCode();
     } else {
       currentUser = null;
       tasks = [];
+      userGroups = [];
       renderTasks();
       console.log("No user logged in");
+    }
+
+    // Group Management Event Listeners
+
+    // Create Group Button
+    const createGroupBtn = document.getElementById("createGroupBtn");
+    if (createGroupBtn) {
+      createGroupBtn.addEventListener("click", () => {
+        document.getElementById("createGroupModal").style.display = "block";
+      });
+    }
+
+    // Cancel Create Group
+    const cancelCreateGroupBtn = document.getElementById(
+      "cancelCreateGroupBtn"
+    );
+    if (cancelCreateGroupBtn) {
+      cancelCreateGroupBtn.addEventListener("click", () => {
+        document.getElementById("createGroupModal").style.display = "none";
+        document.getElementById("createGroupForm").reset();
+      });
+    }
+
+    // Create Group Form Submission
+    const createGroupForm = document.getElementById("createGroupForm");
+    if (createGroupForm) {
+      createGroupForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const groupName = document.getElementById("groupName").value;
+
+        const result = await createGroup(groupName);
+
+        if (result) {
+          document.getElementById("createGroupModal").style.display = "none";
+          createGroupForm.reset();
+        }
+      });
+    }
+
+    // Join Group Button
+    const joinGroupBtn = document.getElementById("joinGroupBtn");
+    if (joinGroupBtn) {
+      joinGroupBtn.addEventListener("click", () => {
+        document.getElementById("joinGroupModal").style.display = "block";
+      });
+    }
+
+    // Cancel Join Group
+    const cancelJoinGroupBtn = document.getElementById("cancelJoinGroupBtn");
+    if (cancelJoinGroupBtn) {
+      cancelJoinGroupBtn.addEventListener("click", () => {
+        document.getElementById("joinGroupModal").style.display = "none";
+        document.getElementById("joinGroupForm").reset();
+      });
+    }
+
+    // Join Group Form Submission
+    const joinGroupForm = document.getElementById("joinGroupForm");
+    if (joinGroupForm) {
+      joinGroupForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const groupCode = document.getElementById("groupCode").value;
+
+        const success = await joinGroup(groupCode);
+
+        if (success) {
+          document.getElementById("joinGroupModal").style.display = "none";
+          joinGroupForm.reset();
+        }
+      });
+    }
+
+    // Close Group Details
+    const closeGroupDetailsBtn = document.getElementById(
+      "closeGroupDetailsBtn"
+    );
+    if (closeGroupDetailsBtn) {
+      closeGroupDetailsBtn.addEventListener("click", () => {
+        document.getElementById("groupDetailsModal").style.display = "none";
+      });
+    }
+
+    // Copy Group Code
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    if (copyCodeBtn) {
+      copyCodeBtn.addEventListener("click", () => {
+        const code = document.getElementById("groupCodeDisplay").textContent;
+        navigator.clipboard.writeText(code).then(() => {
+          showNotification("Group code copied to clipboard!", "success");
+        });
+      });
     }
   });
 
@@ -889,8 +1253,21 @@ document.addEventListener("DOMContentLoaded", function () {
   // Close modal when clicking outside
   window.addEventListener("click", function (event) {
     const taskModal = document.getElementById("taskModal");
+    const createGroupModal = document.getElementById("createGroupModal");
+    const joinGroupModal = document.getElementById("joinGroupModal");
+    const groupDetailsModal = document.getElementById("groupDetailsModal");
+
     if (event.target === taskModal) {
       closeModal();
+    }
+    if (event.target === createGroupModal) {
+      createGroupModal.style.display = "none";
+    }
+    if (event.target === joinGroupModal) {
+      joinGroupModal.style.display = "none";
+    }
+    if (event.target === groupDetailsModal) {
+      groupDetailsModal.style.display = "none";
     }
   });
 });
