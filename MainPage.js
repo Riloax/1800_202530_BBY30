@@ -13,6 +13,9 @@ import {
   where,
   onSnapshot,
   orderBy,
+  setDoc,
+  getDoc,
+  getDocs,
 } from "firebase/firestore";
 
 // ============================================
@@ -23,6 +26,8 @@ let currentUser = null;
 let tasks = [];
 let currentWeekOffset = 0;
 let weekDates = [];
+let userGroups = [];
+let groupsUnsubscribe = null;
 
 // Category filter state (all enabled by default)
 let categoryFilters = {
@@ -41,6 +46,7 @@ let startX = 0;
 let startY = 0;
 let currentX = 0;
 let currentY = 0;
+let autoScrollInterval = null;
 
 // Firestore real-time listener
 let unsubscribe = null;
@@ -56,6 +62,7 @@ let unsubscribe = null;
  */
 function getMonday(d) {
   d = new Date(d);
+  d.setHours(12, 0, 0, 0);
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(d.setDate(diff));
@@ -95,28 +102,31 @@ function updateWeekDisplay() {
     const dayEl = document.getElementById(`day${i}`);
 
     const [year, month, day] = date.split("-").map(Number);
-    const dateObj = new Date(year, month - 1, day);
+    // Fix timezone issue by using UTC
+    const dateObj = new Date(Date.UTC(year, month - 1, day));
 
     dayEl.innerHTML = `${
       dayNames[i]
-    }<br><span style="font-size: 12px; font-weight: normal;">${dateObj.getDate()}/${
-      dateObj.getMonth() + 1
+    }<br><span style="font-size: 12px; font-weight: normal;">${dateObj.getUTCDate()}/${
+      dateObj.getUTCMonth() + 1
     }</span>`;
   });
 
   // Update week range display
   const [year1, month1, day1] = weekDates[0].split("-").map(Number);
   const [year2, month2, day2] = weekDates[6].split("-").map(Number);
-  const firstDate = new Date(year1, month1 - 1, day1);
-  const lastDate = new Date(year2, month2 - 1, day2);
+  const firstDate = new Date(Date.UTC(year1, month1 - 1, day1));
+  const lastDate = new Date(Date.UTC(year2, month2 - 1, day2));
 
   document.getElementById(
     "weekDisplay"
-  ).textContent = `${firstDate.getDate()} ${firstDate.toLocaleString("en", {
+  ).textContent = `${firstDate.getUTCDate()} ${firstDate.toLocaleString("en", {
     month: "short",
-  })} - ${lastDate.getDate()} ${lastDate.toLocaleString("en", {
+    timeZone: "UTC",
+  })} - ${lastDate.getUTCDate()} ${lastDate.toLocaleString("en", {
     month: "short",
-  })} ${lastDate.getFullYear()}`;
+    timeZone: "UTC",
+  })} ${lastDate.getUTCFullYear()}`;
 }
 
 /**
@@ -130,12 +140,17 @@ function changeWeek(offset) {
 }
 
 /**
- * Initialize the calendar grid (24 hours x 7 days)
+ * Initialize the calendar grid (24 hours x 7 days, starting from 6 AM)
  */
 function initCalendar() {
   const calendarBody = document.getElementById("calendarBody");
 
-  for (let hour = 0; hour < 24; hour++) {
+  // Create hours array: 6-23, then 0-5
+  const hours = [...Array(18).keys()]
+    .map((i) => i + 6)
+    .concat([...Array(6).keys()]);
+
+  hours.forEach((hour) => {
     const row = document.createElement("div");
     row.className = "calendar-row";
 
@@ -155,9 +170,15 @@ function initCalendar() {
     }
 
     calendarBody.appendChild(row);
-  }
+  });
 
   updateWeekDisplay();
+
+  // Scroll to 6 AM (top of the schedule)
+  const scheduleBox = document.querySelector(".schedule-box");
+  if (scheduleBox) {
+    scheduleBox.scrollTop = 0;
+  }
 }
 
 // ============================================
@@ -181,6 +202,38 @@ function shouldShowTask(category) {
 function updateCategoryFilter(category, isChecked) {
   categoryFilters[category] = isChecked;
   renderTasks();
+}
+
+// ============================================
+// Notification Functions
+// ============================================
+
+/**
+ * Show a notification message to the user
+ * @param {string} message - Message to display
+ * @param {string} type - Type of notification ('success', 'error', 'info')
+ */
+function showNotification(message, type = "success") {
+  // Create notification element
+  const notification = document.createElement("div");
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+
+  // Add to body
+  document.body.appendChild(notification);
+
+  // Trigger animation
+  setTimeout(() => {
+    notification.classList.add("show");
+  }, 10);
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove("show");
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 3000);
 }
 
 // ============================================
@@ -271,6 +324,7 @@ function handleDragMove(x, y) {
     dragClone.style.opacity = "0.8";
     dragClone.style.zIndex = "10000";
     dragClone.style.width = draggedElement.offsetWidth + "px";
+    dragClone.style.height = draggedElement.offsetHeight + "px";
     dragClone.style.cursor = "grabbing";
     dragClone.style.transform = "scale(1.05)";
     document.body.appendChild(dragClone);
@@ -283,6 +337,46 @@ function handleDragMove(x, y) {
     // Move clone to follow cursor
     dragClone.style.left = x - draggedElement.offsetWidth / 2 + "px";
     dragClone.style.top = y - 20 + "px";
+
+    // Auto-scroll functionality
+    const scheduleBox = document.querySelector(".schedule-box");
+    if (scheduleBox) {
+      const rect = scheduleBox.getBoundingClientRect();
+      const scrollThreshold = 50; // pixels from edge to trigger scroll
+      const scrollSpeed = 10; // pixels per interval
+
+      // Clear existing interval
+      if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+      }
+
+      // Check if near top edge
+      if (y - rect.top < scrollThreshold && y > rect.top) {
+        autoScrollInterval = setInterval(() => {
+          scheduleBox.scrollTop -= scrollSpeed;
+        }, 20);
+      }
+      // Check if near bottom edge
+      else if (rect.bottom - y < scrollThreshold && y < rect.bottom) {
+        autoScrollInterval = setInterval(() => {
+          scheduleBox.scrollTop += scrollSpeed;
+        }, 20);
+      }
+
+      // Check if near left edge
+      else if (x - rect.left < scrollThreshold && x > rect.left) {
+        autoScrollInterval = setInterval(() => {
+          scheduleBox.scrollLeft -= scrollSpeed;
+        }, 20);
+      }
+      // Check if near right edge
+      else if (rect.right - x < scrollThreshold && x < rect.right) {
+        autoScrollInterval = setInterval(() => {
+          scheduleBox.scrollLeft += scrollSpeed;
+        }, 20);
+      }
+    }
 
     // Find cell under cursor
     const elements = document.elementsFromPoint(x, y);
@@ -338,22 +432,80 @@ async function finishDrag() {
       const hour = parseInt(dayCell.dataset.hour);
 
       const newDate = weekDates[dayIndex];
-      const newTime = `${hour.toString().padStart(2, "0")}:00`;
+
+      // Use the exact hour from the cell (no minute offset calculation)
+      const oldStartTime = draggedTask.startTime || draggedTask.time;
+      const oldStartMinute = parseInt(oldStartTime.split(":")[1]) || 0;
+
+      // Keep the same minutes as the original task
+      const newStartTime = `${hour.toString().padStart(2, "0")}:${oldStartMinute
+        .toString()
+        .padStart(2, "0")}`;
+
+      // Calculate end time based on duration
+      const oldEndTime = draggedTask.time;
+
+      // Validate that old times exist
+      if (!oldStartTime || !oldEndTime) {
+        console.error("Task missing time information for drag operation");
+        cleanupDrag();
+        return;
+      }
+
+      // Calculate duration in minutes
+      const oldStartParts = oldStartTime.split(":");
+      const oldEndParts = oldEndTime.split(":");
+      const oldStartMinutes =
+        parseInt(oldStartParts[0]) * 60 + parseInt(oldStartParts[1]);
+      const oldEndMinutes =
+        parseInt(oldEndParts[0]) * 60 + parseInt(oldEndParts[1]);
+      let durationMinutes = oldEndMinutes - oldStartMinutes;
+
+      // Handle next day scenario
+      if (durationMinutes < 0) {
+        durationMinutes += 24 * 60;
+      }
+
+      // Calculate new end time
+      const newStartMinutes = hour * 60 + oldStartMinute;
+      const newEndMinutes = newStartMinutes + durationMinutes;
+      const newEndHour = Math.floor(newEndMinutes / 60) % 24;
+      const newEndMinute = newEndMinutes % 60;
+      const newEndTime = `${newEndHour
+        .toString()
+        .padStart(2, "0")}:${newEndMinute.toString().padStart(2, "0")}`;
 
       // Update in Firestore if date/time changed
-      if (draggedTask.date !== newDate || draggedTask.time !== newTime) {
+      if (
+        draggedTask.date !== newDate ||
+        draggedTask.startTime !== newStartTime
+      ) {
         try {
           const taskRef = doc(db, "tasks", draggedTask.firestoreId);
           await updateDoc(taskRef, {
             date: newDate,
-            time: newTime,
+            startTime: newStartTime,
+            time: newEndTime,
           });
         } catch (error) {
           console.error("Error updating task:", error);
-          alert("Failed to update task");
+          showNotification("Failed to update task", "error");
         }
       }
     }
+  }
+
+  cleanupDrag();
+}
+
+/**
+ * Cleanup drag elements and state
+ */
+function cleanupDrag() {
+  // Clear auto-scroll interval
+  if (autoScrollInterval) {
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = null;
   }
 
   // Cleanup
@@ -393,63 +545,159 @@ function closeModal() {
 // ============================================
 
 /**
+ * Calculate the height of task based on duration (in minutes precision)
+ * @param {string} startTime - Start time in HH:mm format
+ * @param {string} endTime - End time in HH:mm format
+ * @returns {number} - Duration in hours (decimal)
+ */
+function calculateDuration(startTime, endTime) {
+  // Validate inputs
+  if (
+    !startTime ||
+    !endTime ||
+    typeof startTime !== "string" ||
+    typeof endTime !== "string"
+  ) {
+    console.warn(
+      "Invalid time format in calculateDuration:",
+      startTime,
+      endTime
+    );
+    return 1; // Default to 1 hour
+  }
+
+  const startParts = startTime.split(":");
+  const endParts = endTime.split(":");
+
+  if (startParts.length < 2 || endParts.length < 2) {
+    console.warn(
+      "Invalid time format in calculateDuration:",
+      startTime,
+      endTime
+    );
+    return 1; // Default to 1 hour
+  }
+
+  const startHour = parseInt(startParts[0]);
+  const startMinute = parseInt(startParts[1]) || 0;
+  const endHour = parseInt(endParts[0]);
+  const endMinute = parseInt(endParts[1]) || 0;
+
+  // Convert to total minutes
+  const startTotalMinutes = startHour * 60 + startMinute;
+  let endTotalMinutes = endHour * 60 + endMinute;
+
+  // Handle next day scenario (e.g., 23:00 to 02:00)
+  if (endTotalMinutes < startTotalMinutes) {
+    endTotalMinutes += 24 * 60; // Add 24 hours
+  }
+
+  const durationMinutes = endTotalMinutes - startTotalMinutes;
+  const durationHours = durationMinutes / 60;
+
+  // Ensure minimum duration of 5 minutes (0.083 hours)
+  return durationHours > 0.083 ? durationHours : 0.083;
+}
+
+/**
  * Render all tasks on the calendar
  */
+/**
+ * Render all tasks on the calendar
+ * FIXED: Uses Percentage (%) instead of Pixels for responsiveness
+ */
 function renderTasks() {
-  // Remove all existing task elements
+  // Remove all existing task elements & overlays
   document.querySelectorAll(".task-item").forEach((item) => item.remove());
+  document.querySelectorAll(".task-overlay").forEach((item) => item.remove());
 
   tasks.forEach((task) => {
+    // Skip if invalid
+    if (!task.date || !task.time) return;
+
     const dayIndex = weekDates.indexOf(task.date);
 
     if (dayIndex !== -1) {
-      const hour = parseInt(task.time.split(":")[0]);
+      // Data preparation
+      const startTime = task.startTime || task.time;
+      const endTime = task.time;
 
-      const cell = document.querySelector(
-        `.day-cell[data-day-index="${dayIndex}"][data-hour="${hour}"]`
+      const startHour = parseInt(startTime.split(":")[0]);
+      const startMinute = parseInt(startTime.split(":")[1]) || 0;
+
+      let endHour = parseInt(endTime.split(":")[0]);
+      let endMinute = parseInt(endTime.split(":")[1]) || 0;
+
+      if (task.startTime && task.startTime === task.time) {
+        endHour = startHour + 1;
+      }
+
+      const startCell = document.querySelector(
+        `.day-cell[data-day-index="${dayIndex}"][data-hour="${startHour}"]`
       );
 
-      if (cell) {
+      if (startCell) {
+        // 1. Calculate Duration in Minutes
+        const startTotalMinutes = startHour * 60 + startMinute;
+        let endTotalMinutes = endHour * 60 + endMinute;
+
+        if (endTotalMinutes <= startTotalMinutes) endTotalMinutes += 24 * 60;
+
+        const durationMinutes = endTotalMinutes - startTotalMinutes;
+
+        const heightPercentage = (durationMinutes / 60) * 100;
+
+        const topPercentage = (startMinute / 60) * 100;
+
+        // -------------------------
+
+        // Create Task Element
         const taskItem = document.createElement("div");
         taskItem.className = "task-item";
-        taskItem.dataset.category = task.category || "study"; // Default to study if no category
+        taskItem.dataset.category = task.category || "study";
 
-        // Apply visibility based on category filter
         if (!shouldShowTask(task.category || "study")) {
           taskItem.classList.add("hidden");
         }
 
+        taskItem.style.position = "absolute";
+
+        taskItem.style.top = `${topPercentage}%`;
+
+        taskItem.style.left = "0";
+        taskItem.style.width = "100%";
+
+        taskItem.style.height = `${heightPercentage}%`;
+
+        taskItem.style.zIndex = "10";
+        taskItem.style.boxSizing = "border-box";
+
+        const timeDisplay = `${startTime} - ${endTime}`;
+
         taskItem.innerHTML = `
           <div class="task-name">${task.name}</div>
-          <div class="task-time">${task.time}</div>
+          <div class="task-time">${timeDisplay}</div>
           <button class="task-delete">×</button>
         `;
 
-        // Add drag event listeners (both mouse and touch)
-        taskItem.addEventListener("mousedown", (e) => {
-          handleMouseDown(e, task, taskItem);
-        });
-
+        taskItem.addEventListener("mousedown", (e) =>
+          handleMouseDown(e, task, taskItem)
+        );
         taskItem.addEventListener(
           "touchstart",
-          (e) => {
-            handleMouseDown(e, task, taskItem);
-          },
+          (e) => handleMouseDown(e, task, taskItem),
           { passive: false }
         );
 
-        // Delete button handler
         taskItem
           .querySelector(".task-delete")
           .addEventListener("click", (e) => {
             e.stopPropagation();
-            e.preventDefault();
-            if (confirm(`Delete task "${task.name}"?`)) {
+            if (confirm(`Delete task "${task.name}"?`))
               deleteTask(task.firestoreId);
-            }
           });
 
-        cell.appendChild(taskItem);
+        startCell.appendChild(taskItem);
       }
     }
   });
@@ -464,9 +712,10 @@ async function deleteTask(firestoreId) {
 
   try {
     await deleteDoc(doc(db, "tasks", firestoreId));
+    showNotification("Task deleted successfully", "success");
   } catch (error) {
     console.error("Error deleting task:", error);
-    alert("Failed to delete task");
+    showNotification("Failed to delete task", "error");
   }
 }
 
@@ -506,6 +755,264 @@ function loadTasks() {
 }
 
 // ============================================
+// Group Functions
+// ============================================
+
+/**
+ * Generate a unique shareable group code
+ */
+function generateGroupCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+/**
+ * Create a new group
+ */
+async function createGroup(groupName) {
+  if (!auth.currentUser) {
+    showNotification("Please login first", "error");
+    return null;
+  }
+
+  try {
+    const groupCode = generateGroupCode();
+
+    const groupData = {
+      name: groupName,
+      code: groupCode,
+      createdBy: auth.currentUser.uid,
+      createdAt: new Date(),
+      members: [auth.currentUser.uid],
+      memberDetails: {
+        [auth.currentUser.uid]: {
+          email: auth.currentUser.email,
+          joinedAt: new Date(),
+          role: "owner",
+        },
+      },
+    };
+
+    const groupRef = await addDoc(collection(db, "groups"), groupData);
+
+    // Add group reference to user's document
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const currentGroups = userDoc.data().groups || [];
+      await updateDoc(userRef, {
+        groups: [...currentGroups, groupRef.id],
+      });
+    }
+
+    showNotification("Group created successfully!", "success");
+    return { id: groupRef.id, code: groupCode };
+  } catch (error) {
+    console.error("Error creating group:", error);
+    showNotification("Failed to create group", "error");
+    return null;
+  }
+}
+
+/**
+ * Join a group using invite code
+ */
+async function joinGroup(groupCode) {
+  if (!auth.currentUser) {
+    showNotification("Please login first", "error");
+    return false;
+  }
+
+  try {
+    // Find group by code
+    const groupsRef = collection(db, "groups");
+    const q = query(groupsRef, where("code", "==", groupCode.toUpperCase()));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      showNotification("Invalid group code", "error");
+      return false;
+    }
+
+    const groupDoc = snapshot.docs[0];
+    const groupData = groupDoc.data();
+
+    // Check if already a member
+    if (groupData.members.includes(auth.currentUser.uid)) {
+      showNotification("You are already in this group", "info");
+      return false;
+    }
+
+    // Add user to group
+    await updateDoc(doc(db, "groups", groupDoc.id), {
+      members: [...groupData.members, auth.currentUser.uid],
+      [`memberDetails.${auth.currentUser.uid}`]: {
+        email: auth.currentUser.email,
+        joinedAt: new Date(),
+        role: "member",
+      },
+    });
+
+    // Add group to user's document
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const currentGroups = userDoc.data().groups || [];
+      await updateDoc(userRef, {
+        groups: [...currentGroups, groupDoc.id],
+      });
+    }
+
+    showNotification("Successfully joined the group!", "success");
+    return true;
+  } catch (error) {
+    console.error("Error joining group:", error);
+    showNotification("Failed to join group", "error");
+    return false;
+  }
+}
+
+/**
+ * Listen to user's groups in real-time
+ */
+function listenUserGroups(userId, callback) {
+  const groupsRef = collection(db, "groups");
+  const q = query(groupsRef, where("members", "array-contains", userId));
+
+  return onSnapshot(q, (snapshot) => {
+    const groups = [];
+    snapshot.forEach((doc) => {
+      groups.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+    callback(groups);
+  });
+}
+
+/**
+ * Render user's groups
+ */
+function renderGroups(groups) {
+  const groupsList = document.getElementById("groupsList");
+
+  if (!groupsList) return;
+
+  groupsList.innerHTML = "";
+
+  if (groups.length === 0) {
+    groupsList.innerHTML =
+      '<p style="color: #666; text-align: center; padding: 20px;">No groups yet. Create or join a group!</p>';
+    return;
+  }
+
+  groups.forEach((group) => {
+    const groupCard = document.createElement("div");
+    groupCard.className = "group-card";
+
+    const isOwner = group.createdBy === currentUser.uid;
+    const memberCount = group.members ? group.members.length : 0;
+
+    groupCard.innerHTML = `
+      <div class="group-card-header">
+        <div class="group-name">${group.name}</div>
+        <div class="group-role">${isOwner ? "Owner" : "Member"}</div>
+      </div>
+      <div class="group-info">
+        <span class="group-members-count">👥 ${memberCount} member${
+      memberCount !== 1 ? "s" : ""
+    }</span>
+      </div>
+    `;
+
+    groupCard.addEventListener("click", () => openGroupDetails(group));
+    groupsList.appendChild(groupCard);
+  });
+}
+
+/**
+ * Open group details modal
+ */
+function openGroupDetails(group) {
+  const modal = document.getElementById("groupDetailsModal");
+  const title = document.getElementById("groupDetailsTitle");
+  const codeDisplay = document.getElementById("groupCodeDisplay");
+  const membersList = document.getElementById("groupMembersList");
+
+  title.textContent = group.name;
+  codeDisplay.textContent = group.code;
+
+  // Render members
+  membersList.innerHTML = "";
+  if (group.memberDetails) {
+    Object.entries(group.memberDetails).forEach(([userId, details]) => {
+      const memberItem = document.createElement("div");
+      memberItem.className = "member-item";
+      memberItem.textContent = `${details.email} ${
+        details.role === "owner" ? "(Owner)" : ""
+      }`;
+      membersList.appendChild(memberItem);
+    });
+  }
+
+  modal.style.display = "block";
+}
+
+/**
+ * Initialize user's groups listener
+ */
+function initGroupsListener() {
+  if (!currentUser) return;
+
+  // Unsubscribe from previous listener
+  if (groupsUnsubscribe) {
+    groupsUnsubscribe();
+  }
+
+  groupsUnsubscribe = listenUserGroups(currentUser.uid, (groups) => {
+    userGroups = groups;
+    renderGroups(groups);
+  });
+}
+
+/**
+ * Check URL for join code and auto-join
+ */
+async function checkJoinCode() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const joinCode = urlParams.get("join");
+
+  if (joinCode && currentUser) {
+    await joinGroup(joinCode);
+    // Remove join parameter from URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+/**
+ * Ensure user document exists in Firestore
+ */
+async function ensureUserDocument(user) {
+  const userRef = doc(db, "users", user.uid);
+  const userDoc = await getDoc(userRef);
+
+  if (!userDoc.exists()) {
+    await setDoc(userRef, {
+      email: user.email,
+      createdAt: new Date(),
+      groups: [],
+    });
+  }
+}
+
+// ============================================
 // Authentication Functions
 // ============================================
 
@@ -531,16 +1038,117 @@ document.addEventListener("DOMContentLoaded", function () {
   initCalendar();
 
   // Check authentication state
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
       console.log("User logged in:", user.email);
+
+      // Ensure user document exists
+      await ensureUserDocument(user);
+
+      // Load tasks and groups
       loadTasks();
+      initGroupsListener();
+
+      // Check for join code in URL
+      await checkJoinCode();
     } else {
       currentUser = null;
       tasks = [];
+      userGroups = [];
       renderTasks();
       console.log("No user logged in");
+    }
+
+    // Group Management Event Listeners
+
+    // Create Group Button
+    const createGroupBtn = document.getElementById("createGroupBtn");
+    if (createGroupBtn) {
+      createGroupBtn.addEventListener("click", () => {
+        document.getElementById("createGroupModal").style.display = "block";
+      });
+    }
+
+    // Cancel Create Group
+    const cancelCreateGroupBtn = document.getElementById(
+      "cancelCreateGroupBtn"
+    );
+    if (cancelCreateGroupBtn) {
+      cancelCreateGroupBtn.addEventListener("click", () => {
+        document.getElementById("createGroupModal").style.display = "none";
+        document.getElementById("createGroupForm").reset();
+      });
+    }
+
+    // Create Group Form Submission
+    const createGroupForm = document.getElementById("createGroupForm");
+    if (createGroupForm) {
+      createGroupForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const groupName = document.getElementById("groupName").value;
+
+        const result = await createGroup(groupName);
+
+        if (result) {
+          document.getElementById("createGroupModal").style.display = "none";
+          createGroupForm.reset();
+        }
+      });
+    }
+
+    // Join Group Button
+    const joinGroupBtn = document.getElementById("joinGroupBtn");
+    if (joinGroupBtn) {
+      joinGroupBtn.addEventListener("click", () => {
+        document.getElementById("joinGroupModal").style.display = "block";
+      });
+    }
+
+    // Cancel Join Group
+    const cancelJoinGroupBtn = document.getElementById("cancelJoinGroupBtn");
+    if (cancelJoinGroupBtn) {
+      cancelJoinGroupBtn.addEventListener("click", () => {
+        document.getElementById("joinGroupModal").style.display = "none";
+        document.getElementById("joinGroupForm").reset();
+      });
+    }
+
+    // Join Group Form Submission
+    const joinGroupForm = document.getElementById("joinGroupForm");
+    if (joinGroupForm) {
+      joinGroupForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const groupCode = document.getElementById("groupCode").value;
+
+        const success = await joinGroup(groupCode);
+
+        if (success) {
+          document.getElementById("joinGroupModal").style.display = "none";
+          joinGroupForm.reset();
+        }
+      });
+    }
+
+    // Close Group Details
+    const closeGroupDetailsBtn = document.getElementById(
+      "closeGroupDetailsBtn"
+    );
+    if (closeGroupDetailsBtn) {
+      closeGroupDetailsBtn.addEventListener("click", () => {
+        document.getElementById("groupDetailsModal").style.display = "none";
+      });
+    }
+
+    // Copy Group Code
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    if (copyCodeBtn) {
+      copyCodeBtn.addEventListener("click", () => {
+        const code = document.getElementById("groupCodeDisplay").textContent;
+        navigator.clipboard.writeText(code).then(() => {
+          showNotification("Group code copied to clipboard!", "success");
+        });
+      });
     }
   });
 
@@ -595,37 +1203,71 @@ document.addEventListener("DOMContentLoaded", function () {
       e.preventDefault();
 
       if (!currentUser) {
-        alert("Please login first");
+        showNotification("Please login first", "error");
         return;
       }
 
       const taskName = document.getElementById("taskName").value;
       const taskCategory = document.getElementById("taskCategory").value;
       const taskDate = document.getElementById("taskDate").value;
+      const taskStartTime = document.getElementById("taskStartTime").value;
       const taskTime = document.getElementById("taskTime").value;
 
+      // If end time is provided, validate that it's after start time
+      if (taskTime) {
+        const startHour = parseInt(taskStartTime.split(":")[0]);
+        const startMinute = parseInt(taskStartTime.split(":")[1]);
+        const endHour = parseInt(taskTime.split(":")[0]);
+        const endMinute = parseInt(taskTime.split(":")[1]);
+
+        if (
+          endHour < startHour ||
+          (endHour === startHour && endMinute <= startMinute)
+        ) {
+          showNotification("End time must be after start time", "error");
+          return;
+        }
+      }
+
       try {
-        await addDoc(collection(db, "tasks"), {
+        const taskData = {
           userId: currentUser.uid,
           name: taskName,
           category: taskCategory,
           date: taskDate,
-          time: taskTime,
+          startTime: taskStartTime,
+          time: taskTime || taskStartTime, // Use startTime as fallback if no end time
           createdAt: new Date(),
-        });
+        };
 
+        await addDoc(collection(db, "tasks"), taskData);
+
+        showNotification("Task added successfully!", "success");
         closeModal();
       } catch (error) {
         console.error("Error adding task:", error);
-        alert("Failed to add task");
+        showNotification("Failed to add task", "error");
       }
     });
 
   // Close modal when clicking outside
   window.addEventListener("click", function (event) {
     const taskModal = document.getElementById("taskModal");
+    const createGroupModal = document.getElementById("createGroupModal");
+    const joinGroupModal = document.getElementById("joinGroupModal");
+    const groupDetailsModal = document.getElementById("groupDetailsModal");
+
     if (event.target === taskModal) {
       closeModal();
+    }
+    if (event.target === createGroupModal) {
+      createGroupModal.style.display = "none";
+    }
+    if (event.target === joinGroupModal) {
+      joinGroupModal.style.display = "none";
+    }
+    if (event.target === groupDetailsModal) {
+      groupDetailsModal.style.display = "none";
     }
   });
 });
@@ -788,14 +1430,6 @@ function renderReminders(reminders) {
     listEl.appendChild(card);
   });
 }
-
-// const form = document.getElementById("add-reminder-form");
-// form.addEventListener("submit", (e) => {
-//   e.preventDefault();
-//   const title = document.getElementById("reminder-title").value;
-//   addReminder(auth.currentUser.uid, { title });
-//   form.reset();
-// });
 
 onAuthStateChanged(auth, (user) => {
   if (user) {

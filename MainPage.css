@@ -18,16 +18,56 @@ body {
 }
 
 /* ============================================
+   NOTIFICATION STYLES
+   ============================================ */
+
+.notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.3s ease;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-success {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.notification-error {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.notification-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+/* ============================================
    NAVIGATION BAR
    ============================================ */
 
 .navbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background-color: #fff;
   width: 90%;
   margin-top: 20px;
-  padding: 10px 15px;
+  padding: 15px 25px;
   border-radius: 15px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
@@ -41,15 +81,29 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  margin-right: 10px;
+  color: #667eea;
+  transition: transform 0.3s, color 0.3s;
 }
 
-.search-bar {
+.burger:hover {
+  color: #764ba2;
+  transform: scale(1.1);
+}
+
+.navbar h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+  text-align: center;
   flex-grow: 1;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 16px;
+  user-select: none;
+  cursor: default;
+  padding-right: 45px;
 }
 
 .app-logo {
@@ -108,11 +162,11 @@ body {
 }
 
 .menu-btn:hover {
-  color: #0077cc;
+  color: #667eea;
 }
 
 .logout {
-  color: #c0392b;
+  color: #f5576c;
 }
 
 label {
@@ -150,7 +204,7 @@ label {
 }
 
 .week-btn {
-  background-color: #222;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   padding: 8px 15px;
@@ -161,7 +215,7 @@ label {
 }
 
 .week-btn:hover {
-  background-color: #444;
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
 .week-display {
@@ -176,10 +230,10 @@ label {
   border-radius: 15px;
   padding: 20px;
   position: relative;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
   overflow-y: auto;
   max-height: 600px;
-  touch-action: pan-y;
+  touch-action: pan-y pan-x;
 }
 
 /* ============================================
@@ -201,8 +255,8 @@ label {
   font-weight: bold;
   position: sticky;
   top: 0;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .time-column,
@@ -214,8 +268,13 @@ label {
 }
 
 .time-column {
-  background-color: #f8f8f8;
-  border-radius: 10px 0 0 10px;
+  .time-column {
+    background-color: #f8f8f8;
+    border-radius: 10px 0 0 10px;
+    position: sticky;
+    left: 0;
+    z-index: 150;
+  }
 }
 
 .day-column:last-child {
@@ -247,21 +306,21 @@ label {
   font-size: 12px;
   color: #666;
   font-weight: 500;
+  position: sticky;
+  left: 0;
+  z-index: 50;
 }
 
 /* Day Cells */
 .day-cell {
-  padding: 5px;
+  padding: 0;
   border-right: 1px solid #e0e0e0;
   min-height: 60px;
-  max-height: none !important;
-  height: auto;
   position: relative;
   transition: background-color 0.2s;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
   overflow: visible;
+  box-sizing: border-box;
+  display: block;
 }
 
 .day-cell:hover {
@@ -273,8 +332,20 @@ label {
 }
 
 .day-cell.drag-over {
-  background-color: #e3f2fd !important;
-  border: 2px dashed #2196f3;
+  background-color: #e8ebff !important;
+  border: 2px dashed #667eea;
+}
+
+/* Task overlay to hide grid lines */
+.task-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* ============================================
@@ -283,18 +354,13 @@ label {
 
 .task-item {
   color: white;
-  border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 11px;
-  position: relative;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
   cursor: move;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s, box-shadow 0.2s;
-  width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
-  min-height: fit-content;
-  height: auto;
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
@@ -302,6 +368,26 @@ label {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Fixed size task (no end time) */
+.task-item-fixed {
+  padding: 8px 10px;
+  justify-content: center;
+  gap: 2px;
+}
+
+.task-item-fixed .task-name {
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.task-item-fixed .task-time {
+  font-size: 10px;
 }
 
 /* Category Colors */
@@ -345,10 +431,10 @@ label {
 /* Task Name */
 .task-name {
   font-weight: bold;
-  font-size: 10px;
-  margin-bottom: 2px;
-  padding-right: 20px;
-  line-height: 1.3;
+  font-size: 13px;
+  margin-bottom: 4px;
+  padding-right: 25px;
+  line-height: 1.4;
   max-width: 100%;
   white-space: normal !important;
   overflow: visible !important;
@@ -358,25 +444,26 @@ label {
 
 /* Task Time */
 .task-time {
-  font-size: 9px;
-  opacity: 0.9;
+  font-size: 11px;
+  opacity: 0.95;
   white-space: nowrap;
   pointer-events: none;
+  margin-top: auto;
 }
 
 /* Delete Button */
 .task-delete {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 4px;
+  right: 4px;
   background-color: rgba(255, 255, 255, 0.3);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
   padding: 0;
   display: flex;
@@ -384,10 +471,11 @@ label {
   justify-content: center;
   transition: background-color 0.2s;
   flex-shrink: 0;
+  z-index: 20;
 }
 
 .task-delete:hover {
-  background-color: rgba(255, 68, 68, 0.8);
+  background-color: rgba(255, 68, 68, 0.9);
 }
 
 /* ============================================
@@ -398,7 +486,7 @@ label {
   position: sticky;
   bottom: 15px;
   left: 95%;
-  background-color: #222;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   font-size: 28px;
   border: none;
@@ -410,7 +498,7 @@ label {
 }
 
 .add-btn:hover {
-  background-color: #444;
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
 /* ============================================
@@ -491,12 +579,12 @@ label {
 }
 
 .save-btn {
-  background-color: #222;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
 .save-btn:hover {
-  background-color: #444;
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
 .cancel-btn {
@@ -588,12 +676,12 @@ label {
 
 .switch-pill.left {
   transform: translateX(0%);
-  background-color: rgb(34, 205, 148);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .switch-pill.right {
   transform: translateX(95%);
-  background-color: rgb(255, 142, 72);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 /* ============================================
@@ -626,7 +714,11 @@ label {
 }
 
 .reminder-card:hover {
-  background-color: rgb(147, 210, 189);
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(118, 75, 162, 0.1) 100%
+  );
 }
 
 /* Circle checkbox */
@@ -644,8 +736,8 @@ label {
 
 /* Check mark inside the circle */
 .checkbox-circle.checked {
-  background-color: rgb(34, 205, 148);
-  border-color: rgb(34, 205, 148);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
 }
 
 .checkbox-circle.checked::after {
@@ -674,6 +766,157 @@ label {
   margin-top: 0.3rem;
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+/* ============================================
+   GROUPS SECTION
+   ============================================ */
+
+.groups-section {
+  background-color: #fff;
+  width: 90%;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.groups-section h2 {
+  margin-bottom: 15px;
+}
+
+.groups-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.group-action-btn {
+  flex: 1;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.group-action-btn:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group-card {
+  background-color: #f5f5f5;
+  border-radius: 12px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.group-card:hover {
+  background-color: #e8e8e8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.group-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+}
+
+.group-role {
+  font-size: 12px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 6px;
+}
+
+.group-info {
+  font-size: 13px;
+  color: #666;
+}
+
+.group-members-count {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.group-details-content {
+  margin: 20px 0;
+}
+
+.detail-row {
+  margin-bottom: 20px;
+}
+
+.detail-row strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.code-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+#groupCodeDisplay {
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #222;
+}
+
+.copy-btn {
+  padding: 8px 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.copy-btn:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+#groupMembersList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.member-item {
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
 }
 
 /* ============================================
@@ -763,7 +1006,7 @@ label {
   height: 32px;
   border-radius: 50%;
   border: none;
-  background-color: rgb(34, 205, 148);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-size: 20px;
   line-height: 0; /* avoid weird text vertical centering */
@@ -777,7 +1020,7 @@ label {
 }
 
 .reminder-submit-btn:hover {
-  background-color: rgb(27, 166, 120);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
 }
@@ -887,7 +1130,7 @@ label {
    RESPONSIVE DESIGN
    ============================================ */
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 769px) {
   .calendar-container {
     min-width: 100%;
   }
@@ -901,23 +1144,21 @@ label {
   .navbar {
     position: fixed;
     top: 0;
-    left: 5;
+    left: 0;
     width: 100%;
     margin: 0;
     padding: 10px 15px;
-    border-radius: 25px;
+    border-radius: 0 0 25px 25px;
     z-index: 9999;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
   .burger {
     font-size: 22px;
-    margin-right: 8px;
   }
 
-  .search-bar {
-    font-size: 14px;
-    padding: 6px;
+  .navbar h1 {
+    font-size: 20px;
   }
 
   body {
@@ -979,6 +1220,7 @@ label {
     overflow-x: auto !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
   }
 
   .calendar-container {
@@ -1051,12 +1293,14 @@ label {
 
   .modal-header {
     font-size: 18px;
+    color: #667eea;
   }
 
   .form-group input,
   .form-group select {
     font-size: 16px;
     padding: 12px;
+    border-color: #667eea;
   }
 
   .modal-btn {
@@ -1101,9 +1345,20 @@ label {
     bottom: 15px;
     right: 15px;
   }
+
+  .notification {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    font-size: 13px;
+    padding: 12px 20px;
+  }
 }
 
 @media screen and (max-width: 321px) {
+  .navbar h1 {
+    font-size: 18px;
+  }
   .calendar-container {
     min-width: 600px;
   }

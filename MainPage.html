@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Main Page</title>
+    <link rel="stylesheet" href="MainPage.css" />
+  </head>
 
 <head>
   <meta charset="UTF-8" />
@@ -24,135 +30,256 @@
         👤 Profile
       </button>
     </div>
+  <body>
+    <!-- Top Navbar -->
+    <nav class="navbar">
+      <button class="burger" id="burger-btn">&#9776;</button>
+      <h1>ToDo-Together</h1>
+    </nav>
 
-    <div class="menu-section">
-      <h3>Tasks</h3>
-      <label><input type="checkbox" class="category-filter" data-category="study" checked />
-        Study</label><br />
-      <label><input type="checkbox" class="category-filter" data-category="work" checked />
-        Work</label><br />
-      <label><input type="checkbox" class="category-filter" data-category="exercise" checked />
-        Exercise</label><br />
-      <label><input type="checkbox" class="category-filter" data-category="group" checked />
-        Group Task</label><br />
-    </div>
-
-    <div class="menu-section">
-      <button class="menu-btn" onclick="window.location.href='terms.html'">📜 Terms of Service</button>
-      <button class="menu-btn logout" id="logout-btn">🚪 Logout</button>
-    </div>
-  </div>
-
-  <!-- Schedule Section -->
-  <section class="schedule-section">
-    <h2>Schedule</h2>
-    <div class="week-navigation">
-      <button class="week-btn" id="prevWeek">← Previous Week</button>
-      <span class="week-display" id="weekDisplay"></span>
-      <button class="week-btn" id="nextWeek">Next Week →</button>
-    </div>
-    <div class="schedule-box">
-      <!-- Weekly Calendar -->
-      <div class="calendar-container">
-        <div class="calendar-header">
-          <div class="time-column">Time</div>
-          <div class="day-column" id="day0">Mon</div>
-          <div class="day-column" id="day1">Tue</div>
-          <div class="day-column" id="day2">Wed</div>
-          <div class="day-column" id="day3">Thu</div>
-          <div class="day-column" id="day4">Fri</div>
-          <div class="day-column" id="day5">Sat</div>
-          <div class="day-column" id="day6">Sun</div>
-        </div>
-        <div class="calendar-body" id="calendarBody">
-          <!-- Time slots will be generated here -->
-        </div>
-      </div>
-    </div>
-    <button class="add-btn" id="addBtn">+</button>
-  </section>
-
-  <!-- Task Modal -->
-  <div id="taskModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">Add New Task</div>
-      <form id="taskForm">
-        <div class="form-group">
-          <label for="taskName">Task Name</label>
-          <input type="text" id="taskName" placeholder="Enter task name" required />
-        </div>
-        <div class="form-group">
-          <label for="taskCategory">Category</label>
-          <select id="taskCategory" required>
-            <option value="study">Study</option>
-            <option value="work">Work</option>
-            <option value="exercise">Exercise</option>
-            <option value="group">Group Task</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="taskDate">Deadline Date</label>
-          <input type="date" id="taskDate" required />
-        </div>
-        <div class="form-group">
-          <label for="taskTime">Deadline Time</label>
-          <input type="time" id="taskTime" required />
-        </div>
-        <div class="modal-buttons">
-          <button type="button" class="modal-btn cancel-btn" id="cancelBtn">
-            Cancel
-          </button>
-          <button type="submit" class="modal-btn save-btn">Save Task</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Reminder Section -->
-  <section class="reminder-section">
-    <div class="reminder-header">
-
-      <h2>Reminder</h2>
-      <div class="reminder-switch">
-        <div class="switch-pill left"></div>
-        <button class="active" data-type="personal">Personal</button>
-        <button data-type="group">Group</button>
+    <!-- Dropdown Menu -->
+    <div class="dropdown-menu" id="dropdown-menu">
+      <div class="menu-section">
+        <button class="menu-btn" onclick="window.location.href='Profile.html'">
+          👤 Profile
+        </button>
       </div>
 
+      <div class="menu-section">
+        <h3>Tasks</h3>
+        <label
+          ><input
+            type="checkbox"
+            class="category-filter"
+            data-category="study"
+            checked
+          />
+          Study</label
+        ><br />
+        <label
+          ><input
+            type="checkbox"
+            class="category-filter"
+            data-category="work"
+            checked
+          />
+          Work</label
+        ><br />
+        <label
+          ><input
+            type="checkbox"
+            class="category-filter"
+            data-category="exercise"
+            checked
+          />
+          Exercise</label
+        ><br />
+        <label
+          ><input
+            type="checkbox"
+            class="category-filter"
+            data-category="group"
+            checked
+          />
+          Group Task</label
+        ><br />
+      </div>
+
+      <div class="menu-section">
+        <button class="menu-btn" onclick="window.location.href='terms.html'">
+          📜 Terms of Service
+        </button>
+        <button class="menu-btn logout" id="logout-btn">🚪 Logout</button>
+      </div>
     </div>
 
-    <div class="reminder-container">
-      <!-- Reminder list -->
-      <div id="reminder-list"></div>
+    <!-- Schedule Section -->
+    <section class="schedule-section">
+      <h2>Schedule</h2>
+      <div class="week-navigation">
+        <button class="week-btn" id="prevWeek">← Previous Week</button>
+        <span class="week-display" id="weekDisplay"></span>
+        <button class="week-btn" id="nextWeek">Next Week →</button>
+      </div>
+      <div class="schedule-box">
+        <!-- Weekly Calendar -->
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <div class="time-column">Time</div>
+            <div class="day-column" id="day0">Mon</div>
+            <div class="day-column" id="day1">Tue</div>
+            <div class="day-column" id="day2">Wed</div>
+            <div class="day-column" id="day3">Thu</div>
+            <div class="day-column" id="day4">Fri</div>
+            <div class="day-column" id="day5">Sat</div>
+            <div class="day-column" id="day6">Sun</div>
+          </div>
+          <div class="calendar-body" id="calendarBody">
+            <!-- Time slots will be generated here -->
+          </div>
+        </div>
+      </div>
+      <button class="add-btn" id="addBtn">+</button>
+    </section>
+
+    <!-- Task Modal -->
+    <div id="taskModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">Add New Task</div>
+        <form id="taskForm">
+          <div class="form-group">
+            <label for="taskName">Task Name</label>
+            <input
+              type="text"
+              id="taskName"
+              placeholder="Enter task name"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="taskCategory">Category</label>
+            <select id="taskCategory" required>
+              <option value="study">Study</option>
+              <option value="work">Work</option>
+              <option value="exercise">Exercise</option>
+              <option value="group">Group Task</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="taskDate">Date</label>
+            <input type="date" id="taskDate" required />
+          </div>
+          <div class="form-group">
+            <label for="taskStartTime">Start Time</label>
+            <input type="time" id="taskStartTime" step="300" required />
+          </div>
+          <div class="form-group">
+            <label for="taskTime">End Time (Optional)</label>
+            <input type="time" id="taskTime" step="300" />
+          </div>
+          <div class="modal-buttons">
+            <button type="button" class="modal-btn cancel-btn" id="cancelBtn">
+              Cancel
+            </button>
+            <button type="submit" class="modal-btn save-btn">Save Task</button>
+          </div>
+        </form>
+      </div>
     </div>
 
-    <!-- Sticky bar at bottom -->
-    <div class="reminder-add-bar">
-      <input type="text" id="reminder-search-bar" placeholder="Add a reminder..." readonly />
+    <!-- Groups Section -->
+    <section class="groups-section">
+      <h2>My Groups</h2>
+      <div class="groups-actions">
+        <button class="group-action-btn" id="createGroupBtn">
+          + Create Group
+        </button>
+        <button class="group-action-btn" id="joinGroupBtn">Join Group</button>
+      </div>
+      <div class="groups-list" id="groupsList">
+        <!-- Groups will be rendered here -->
+      </div>
+    </section>
+
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">Create New Group</div>
+        <form id="createGroupForm">
+          <div class="form-group">
+            <label for="groupName">Group Name</label>
+            <input
+              type="text"
+              id="groupName"
+              placeholder="Enter group name"
+              required
+            />
+          </div>
+          <div class="modal-buttons">
+            <button
+              type="button"
+              class="modal-btn cancel-btn"
+              id="cancelCreateGroupBtn"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="modal-btn save-btn">
+              Create Group
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
-    <!-- Popup form (hidden by default) -->
-    <div id="reminder-popup" class="popup-form hidden">
-      <form id="add-reminder-form">
+    <!-- Join Group Modal -->
+    <div id="joinGroupModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">Join a Group</div>
+        <form id="joinGroupForm">
+          <div class="form-group">
+            <label for="groupCode">Group Code</label>
+            <input
+              type="text"
+              id="groupCode"
+              placeholder="Enter 8-character code"
+              maxlength="8"
+              required
+            />
+          </div>
+          <div class="modal-buttons">
+            <button
+              type="button"
+              class="modal-btn cancel-btn"
+              id="cancelJoinGroupBtn"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="modal-btn save-btn">Join Group</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
         <!-- Submit -->
         <div class="form-main">
           <!-- Title -->
           <input type="text" id="reminder-title" placeholder="New reminder" required />
           <!-- <button class="reminder-submit-btn" type="submit">+</button> -->
+    <!-- Group Details Modal -->
+    <div id="groupDetailsModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header" id="groupDetailsTitle">Group Details</div>
+        <div class="group-details-content">
+          <div class="detail-row">
+            <strong>Invite Code:</strong>
+            <div class="code-container">
+              <span id="groupCodeDisplay"></span>
+              <button class="copy-btn" id="copyCodeBtn">📋 Copy</button>
+            </div>
+          </div>
+          <div class="detail-row">
+            <strong>Members:</strong>
+            <div id="groupMembersList"></div>
+          </div>
         </div>
-        <hr>
-        <!-- Due date -->
-        <div class="form-row">
-          <label for="reminder-due">Due Date:</label>
-          <input type="date" id="reminder-due" />
+        <div class="modal-buttons">
+          <button class="modal-btn cancel-btn" id="closeGroupDetailsBtn">
+            Close
+          </button>
         </div>
+      </div>
+    </div>
 
-        <!-- Estimate -->
-        <div class="form-row">
-          <label for="reminder-estimate">Estimate (min):</label>
-          <input type="number" id="reminder-estimate" min="1" />
+    <!-- Reminder Section -->
+    <section class="reminder-section">
+      <div class="reminder-header">
+        <h2>Reminder</h2>
+        <div class="reminder-switch">
+          <div class="switch-pill left"></div>
+          <button class="active" data-type="personal">Personal</button>
+          <button data-type="group">Group</button>
         </div>
+      </div>
 
         <!-- Category -->
         <div class="form-row">
@@ -164,39 +291,57 @@
         <label for="submit">submit:</label>
         <button class="reminder-submit-btn reminder-bottom-btn" type="submit">+</button>
         </div>
-
-      </form>
-    </div>
-
-
-    <!-- <div class="reminder-content">
-      <div class="reminder-category">
-        <h3>Unschedule</h3>
-        <ul>
-          <li>1800 Project</li>
-          <li>Inventory list</li>
-          <li>Mainpage</li>
-        </ul>
+      <div class="reminder-container">
+        <!-- Reminder list -->
+        <div id="reminder-list"></div>
       </div>
-      <div class="reminder-category">
-        <h3>Urgent</h3>
-        <ul>
-          <li>Submit Lab 7</li>
-          <li>Finish Report</li>
-        </ul>
-      </div>
-      <div class="reminder-category">
-        <h3>List</h3>
-        <ul>
-          <li>Buy groceries</li>
-          <li>Walk the dog</li>
-        </ul>
-      </div>
-      <button class="add-rbtn">+</button>
-    </div> -->
-  </section>
 
-  <script type="module" src="MainPage.js"></script>
-</body>
+      <!-- Sticky bar at bottom -->
+      <div class="reminder-add-bar">
+        <input
+          type="text"
+          id="reminder-search-bar"
+          placeholder="Add a reminder..."
+          readonly
+        />
+      </div>
 
+      <!-- Popup form (hidden by default) -->
+      <div id="reminder-popup" class="popup-form hidden">
+        <form id="add-reminder-form">
+          <!-- Submit -->
+          <div class="form-main">
+            <!-- Title -->
+            <input
+              type="text"
+              id="reminder-title"
+              placeholder="New reminder"
+              required
+            />
+            <button class="reminder-submit-btn" type="submit">+</button>
+          </div>
+          <hr />
+          <!-- Due date -->
+          <div class="form-row">
+            <label for="reminder-due">Due Date:</label>
+            <input type="date" id="reminder-due" />
+          </div>
+
+          <!-- Estimate -->
+          <div class="form-row">
+            <label for="reminder-estimate">Estimate (min):</label>
+            <input type="number" id="reminder-estimate" min="1" />
+          </div>
+
+          <!-- Category -->
+          <div class="form-row">
+            <label for="reminder-category">Category:</label>
+            <button type="button" id="reminder-category">Select</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <script type="module" src="MainPage.js"></script>
+  </body>
 </html>
