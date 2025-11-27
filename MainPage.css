@@ -106,6 +106,14 @@ body {
   padding-right: 45px;
 }
 
+.app-logo {
+  height: 100px;          /* adjust as needed */
+  margin-left: 10px;
+  object-fit: contain;
+  pointer-events: none;  /* avoids blocking clicks */
+}
+
+
 /* ============================================
    DROPDOWN MENU
    ============================================ */
@@ -929,7 +937,8 @@ label {
   width: 90%;
   padding: 10px 12px;
   border-radius: 999px;
-  border: 1px solid #ccc;
+  border: 2px solid black;
+  background-color: white;
   cursor: pointer;
 }
 
@@ -1015,6 +1024,81 @@ label {
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
 }
+
+/* Button at bottom-right of popup */
+.reminder-bottom-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
+
+/* Move add reminder button to bottom right of popup */
+.reminder-submit-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  border-radius: 50%;
+}
+
+
+
+
+/* ====================================
+
+.reminder-content {
+  background-color: #f8f8f8;
+  border-radius: 15px;
+  padding: 15px;
+  position: relative;
+}
+
+.reminder-category {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.reminder-category h3 {
+  margin: 5px 0;
+  font-size: 16px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
+}
+
+.reminder-category ul {
+  list-style-type: none;
+  padding-left: 15px;
+  margin: 5px 0;
+}
+
+.reminder-category li {
+  padding: 3px 0;
+}
+
+.add-rbtn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background-color: #222;
+  color: #fff;
+  font-size: 28px;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  cursor: pointer;
+  transition: background 0.3s;
+  z-index: 100;
+}
+
+.add-rbtn:hover {
+  background-color: #444;
+} */
 
 /* ============================================
    ANIMATIONS

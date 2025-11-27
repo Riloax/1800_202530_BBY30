@@ -7,6 +7,29 @@
     <link rel="stylesheet" href="MainPage.css" />
   </head>
 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Main Page</title>
+  <link rel="stylesheet" href="MainPage.css" />
+</head>
+
+<body>
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <button class="burger" id="burger-btn">&#9776;</button>
+
+    <img src="images/Todo_Together_Logo.png" alt="Logo" class="app-logo" />
+    <!-- <input type="text" placeholder="Search" class="search-bar" /> -->
+  </nav>
+
+  <!-- Dropdown Menu -->
+  <div class="dropdown-menu" id="dropdown-menu">
+    <div class="menu-section">
+      <button class="menu-btn" onclick="window.location.href='Profile.html'">
+        👤 Profile
+      </button>
+    </div>
   <body>
     <!-- Top Navbar -->
     <nav class="navbar">
@@ -217,6 +240,11 @@
       </div>
     </div>
 
+        <!-- Submit -->
+        <div class="form-main">
+          <!-- Title -->
+          <input type="text" id="reminder-title" placeholder="New reminder" required />
+          <!-- <button class="reminder-submit-btn" type="submit">+</button> -->
     <!-- Group Details Modal -->
     <div id="groupDetailsModal" class="modal">
       <div class="modal-content">
@@ -253,6 +281,16 @@
         </div>
       </div>
 
+        <!-- Category -->
+        <div class="form-row">
+          <label for="reminder-category">Category:</label>
+          <button type="button" id="reminder-category">Select</button>
+        </div>
+        
+        <div class="form-row">
+        <label for="submit">submit:</label>
+        <button class="reminder-submit-btn reminder-bottom-btn" type="submit">+</button>
+        </div>
       <div class="reminder-container">
         <!-- Reminder list -->
         <div id="reminder-list"></div>
