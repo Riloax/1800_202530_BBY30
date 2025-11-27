@@ -745,6 +745,15 @@ function renderReminders(reminders) {
 
     const due = document.createElement("div");
     due.className = "reminder-due";
+    const estimate = document.createElement("div");
+    estimate.className = "reminder-estimate";
+
+    if (reminder.estimate_minutes) {
+    estimate.textContent = reminder.estimate_minutes + " min";
+    } else {
+    estimate.textContent = "";
+      }
+
     if (reminder.due_date) {
       const date = reminder.due_date.toDate
         ? reminder.due_date.toDate()
@@ -760,6 +769,8 @@ function renderReminders(reminders) {
 
     content.appendChild(title);
     content.appendChild(due);
+    content.appendChild(estimate);
+
 
     // Combine checkbox + content
     card.appendChild(checkbox);

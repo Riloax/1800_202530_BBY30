@@ -52,6 +52,14 @@ body {
   font-size: 16px;
 }
 
+.app-logo {
+  height: 100px;          /* adjust as needed */
+  margin-left: 10px;
+  object-fit: contain;
+  pointer-events: none;  /* avoids blocking clicks */
+}
+
+
 /* ============================================
    DROPDOWN MENU
    ============================================ */
@@ -686,7 +694,8 @@ label {
   width: 90%;
   padding: 10px 12px;
   border-radius: 999px;
-  border: 1px solid #ccc;
+  border: 2px solid black;
+  background-color: white;
   cursor: pointer;
 }
 
@@ -772,6 +781,27 @@ label {
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
 }
+
+/* Button at bottom-right of popup */
+.reminder-bottom-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
+
+/* Move add reminder button to bottom right of popup */
+.reminder-submit-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  border-radius: 50%;
+}
+
+
+
 
 /* ====================================
 
