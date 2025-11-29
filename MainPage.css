@@ -935,6 +935,7 @@ label {
 /* The input that looks like a search bar */
 #reminder-search-bar {
   width: 90%;
+  box-sizing: border-box;
   padding: 10px 12px;
   border-radius: 999px;
   border: 2px solid black;
@@ -1033,7 +1034,7 @@ label {
 }
 
 /* Move add reminder button to bottom right of popup */
-.reminder-submit-btn {
+/* .reminder-submit-btn {
   position: absolute;
   bottom: 15px;
   right: 15px;
@@ -1041,6 +1042,26 @@ label {
   height: 30px;
   font-size: 18px;
   border-radius: 50%;
+} */
+
+.submit-row {
+  display: flex;
+  justify-content: flex-end; 
+  margin-top: 1rem;
+}
+
+.reminder-submit-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 
