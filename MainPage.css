@@ -107,12 +107,11 @@ body {
 }
 
 .app-logo {
-  height: 100px;          /* adjust as needed */
+  height: 100px; /* adjust as needed */
   margin-left: 10px;
   object-fit: contain;
-  pointer-events: none;  /* avoids blocking clicks */
+  pointer-events: none; /* avoids blocking clicks */
 }
-
 
 /* ============================================
    DROPDOWN MENU
@@ -597,178 +596,6 @@ label {
 }
 
 /* ============================================
-   REMINDER SECTION
-   ============================================ */
-
-.reminder-section {
-  background-color: #fff;
-  width: 90%;
-  border-radius: 20px;
-  padding: 20px;
-  margin-top: 20px;
-  /* margin-bottom: 30px; */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-/* ============================================
-   REMINDER HEADER
-   ============================================ */
-.reminder-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.reminder-header {
-  position: relative;
-  display: flex;
-  gap: 5rem;
-  align-items: center;
-  padding: 0 0rem;
-  margin-bottom: 1rem;
-}
-
-.reminder-header h2 {
-  margin: 0;
-}
-
-.reminder-switch {
-  position: absolute;
-  left: 70%;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 0rem;
-  border-radius: 90px;
-  background-color: #f3f3f3;
-  overflow: hidden;
-}
-
-/* sliding pill background */
-.switch-pill {
-  position: absolute;
-  width: 55%; /* half of container minus padding */
-  height: 100%;
-  border-radius: 90px;
-  transition: transform 0.25s ease;
-  z-index: 0;
-}
-
-.reminder-switch button {
-  position: relative;
-  z-index: 1;
-  flex: 1 0 0;
-  padding: 0.3rem 1.5rem;
-  border-radius: 90px;
-  font-size: 2rem;
-  border: none;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-  color: gray;
-}
-
-.reminder-switch button.active {
-  /* background-color: #333; */
-  color: white;
-  font-weight: 600;
-}
-
-.switch-pill.left {
-  transform: translateX(0%);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.switch-pill.right {
-  transform: translateX(95%);
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-/* ============================================
-   REMINDER CONTENT
-   ============================================ */
-/* Container for all reminders */
-.reminder-container {
-  position: relative;
-  margin-top: 16px;
-}
-
-#reminder-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-/* Individual reminder card */
-.reminder-card {
-  display: flex;
-  align-items: center;
-  padding: 1rem 16px;
-  margin: 0.1rem;
-  border-radius: 12px;
-  background-color: #f5f5f5;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.reminder-card:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(102, 126, 234, 0.1) 0%,
-    rgba(118, 75, 162, 0.1) 100%
-  );
-}
-
-/* Circle checkbox */
-.checkbox-circle {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #888;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-right: 12px;
-}
-
-/* Check mark inside the circle */
-.checkbox-circle.checked {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-}
-
-.checkbox-circle.checked::after {
-  content: "✓";
-  color: white;
-  font-size: 1rem;
-  font-weight: bolder;
-}
-
-.reminder-content {
-  display: flex;
-  flex-direction: column;
-  background-color: transparent;
-}
-
-/* Reminder title */
-.reminder-title {
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-/* Due date on the right */
-.reminder-due {
-  font-size: 14px;
-  color: #7e7e7e;
-  margin-top: 0.3rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-/* ============================================
    GROUPS SECTION
    ============================================ */
 
@@ -920,7 +747,271 @@ label {
 }
 
 /* ============================================
-   REMINDER SEARCH BAR
+   REMINDER SECTION
+   ============================================ */
+
+.reminder-section {
+  background-color: #fff;
+  width: 90%;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 20px;
+  /* margin-bottom: 30px; */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* ============================================
+   REMINDER HEADER
+   ============================================ */
+.reminder-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.reminder-header {
+  position: relative;
+  display: flex;
+  gap: 5rem;
+  align-items: center;
+  padding: 0 0rem;
+  margin-bottom: 1rem;
+}
+
+.reminder-header h2 {
+  margin: 0;
+}
+
+.reminder-switch {
+  position: absolute;
+  left: 70%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0rem;
+  border-radius: 90px;
+  background-color: #f3f3f3;
+  overflow: hidden;
+}
+
+/* sliding pill background */
+.switch-pill {
+  position: absolute;
+  width: 55%; /* half of container minus padding */
+  height: 100%;
+  border-radius: 90px;
+  transition: transform 0.25s ease;
+  z-index: 0;
+}
+
+.reminder-switch button {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 0;
+  padding: 0.3rem 1.5rem;
+  border-radius: 90px;
+  font-size: 2rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: gray;
+}
+
+.reminder-switch button.active {
+  /* background-color: #333; */
+  color: white;
+  font-weight: 600;
+}
+
+.switch-pill.left {
+  transform: translateX(0%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.switch-pill.right {
+  transform: translateX(95%);
+  background: linear-gradient(135deg, #ffcc33 0%, #ff6a00 100%);
+}
+
+/* ============================================
+   REMINDER CONTENT
+   ============================================ */
+/* Container for all reminders */
+.reminder-container {
+  position: relative;
+  margin-top: 16px;
+}
+
+#reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Individual reminder card */
+.reminder-card {
+  display: flex;
+  position: relative;
+  align-items: center;
+  padding: 1rem 16px;
+  margin: 0.1rem;
+  border-radius: 12px;
+  background-color: #f5f5f5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s;
+}
+
+/* .reminder-card:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(118, 75, 162, 0.1) 100%
+  );
+} */
+
+/* Circle checkbox */
+.checkbox-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #667eea;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+/* Check mark inside the circle */
+.checkbox-circle.checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  /* border-width: 0; */
+}
+
+.checkbox-circle.checked::after {
+  content: "✓";
+  color: white;
+  font-size: 1rem;
+  font-weight: bolder;
+}
+
+.reminder-card.completed .reminder-title,
+.reminder-card.completed .reminder-due,
+.reminder-card.completed .reminder-estimate {
+  text-decoration: line-through;
+  color: #999; /* optional: fade text */
+}
+
+.reminder-content {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+}
+
+/* Reminder title */
+.reminder-title {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Due date on the right */
+.reminder-due {
+  font-size: 14px;
+  color: #7e7e7e;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.reminder-estimate {
+  font-size: 14px;
+  color: #7e7e7e;
+  margin-top: 0.3rem;
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.reminder-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+
+  width: 18px;
+  height: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  font-weight: bold;
+
+  background: #e2e2e2;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.reminder-delete-btn:hover {
+  opacity: 1;
+  background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+}
+
+.confirm-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 1000;
+}
+
+.confirm-box {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 220px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.confirm-actions button {
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+#confirm-yes {
+  background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+  color: white;
+}
+
+#confirm-no {
+  background: linear-gradient(135deg, #b4b4b4 0%, #e8e8e8 100%);
+  color: rgb(72, 72, 72);
+}
+
+/* ============================================
+   REMINDER ADD BAR
    ============================================ */
 
 /* Sticky bar at bottom of viewport while inside section */
@@ -934,14 +1025,18 @@ label {
 
 /* The input that looks like a search bar */
 #reminder-search-bar {
-  width: 90%;
+  width: 100%;
   box-sizing: border-box;
   padding: 10px 12px;
   border-radius: 999px;
-  border: 2px solid black;
-  background-color: white;
+  border: 2px solid #667eea;
+  background-color: #f5f5f5;
   cursor: pointer;
 }
+
+/* ============================================
+   REMINDER POPUP FORM
+   ============================================ */
 
 /* Popup form */
 .popup-form {
@@ -1003,13 +1098,13 @@ label {
 
 /* Circle submit button */
 .reminder-submit-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  font-size: 20px;
+  font-size: 22px;
   line-height: 0; /* avoid weird text vertical centering */
   display: flex;
   align-items: center;
@@ -1026,100 +1121,18 @@ label {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
 }
 
-/* Button at bottom-right of popup */
-.reminder-bottom-btn {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
+.reminder-submit-btn:disabled {
+  background-color: #ccc;
+  color: white;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-
-/* Move add reminder button to bottom right of popup */
-/* .reminder-submit-btn {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
-  width: 30px;
-  height: 30px;
-  font-size: 18px;
-  border-radius: 50%;
-} */
 
 .submit-row {
   display: flex;
-  justify-content: flex-end; 
+  justify-content: flex-end;
   margin-top: 1rem;
 }
-
-.reminder-submit-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-
-
-
-/* ====================================
-
-.reminder-content {
-  background-color: #f8f8f8;
-  border-radius: 15px;
-  padding: 15px;
-  position: relative;
-}
-
-.reminder-category {
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-}
-
-.reminder-category h3 {
-  margin: 5px 0;
-  font-size: 16px;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 5px;
-}
-
-.reminder-category ul {
-  list-style-type: none;
-  padding-left: 15px;
-  margin: 5px 0;
-}
-
-.reminder-category li {
-  padding: 3px 0;
-}
-
-.add-rbtn {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
-  background-color: #222;
-  color: #fff;
-  font-size: 28px;
-  border: none;
-  border-radius: 50%;
-  width: 45px;
-  height: 45px;
-  cursor: pointer;
-  transition: background 0.3s;
-  z-index: 100;
-}
-
-.add-rbtn:hover {
-  background-color: #444;
-} */
 
 /* ============================================
    ANIMATIONS

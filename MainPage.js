@@ -1372,6 +1372,10 @@ function renderReminders(reminders) {
     const card = document.createElement("div");
     card.className = "reminder-card";
 
+    if (reminder.is_completed) {
+      card.classList.add("completed");
+    }
+
     // Left: checkbox
     const checkbox = document.createElement("div");
     checkbox.className = "checkbox-circle";
@@ -1387,14 +1391,12 @@ function renderReminders(reminders) {
 
     const due = document.createElement("div");
     due.className = "reminder-due";
+
     const estimate = document.createElement("div");
     estimate.className = "reminder-estimate";
-
-    if (reminder.estimate_minutes) {
-    estimate.textContent = reminder.estimate_minutes + " min";
-    } else {
-    estimate.textContent = "";
-      }
+    estimate.textContent = reminder.estimate_minutes
+      ? "Est: " + reminder.estimate_minutes + " min"
+      : "";
 
     if (reminder.due_date) {
       const date = reminder.due_date.toDate
@@ -1409,17 +1411,34 @@ function renderReminders(reminders) {
       due.textContent = "";
     }
 
+    // Delete button (top-right)
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "reminder-delete-btn";
+    deleteBtn.textContent = "x"; // or use 🗑️
+
+    // Prevent toggle
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openDeletePopup(reminder.id); // show confirm dialog
+    });
+
     content.appendChild(title);
     content.appendChild(due);
-    content.appendChild(estimate);
-
 
     // Combine checkbox + content
     card.appendChild(checkbox);
     card.appendChild(content);
+    card.appendChild(estimate);
+    card.appendChild(deleteBtn);
 
-    // Click to toggle completion
-    card.addEventListener("click", () => {
+    // Click checkbox to toggle completion
+    checkbox.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      // visual update immediately
+      checkbox.classList.toggle("checked");
+      card.classList.toggle("completed");
+
       toggleReminderCompleted(
         auth.currentUser.uid,
         reminder.id,
@@ -1431,6 +1450,37 @@ function renderReminders(reminders) {
   });
 }
 
+// delete reminder
+let pendingDeleteId = null;
+
+function openDeletePopup(reminderId) {
+  pendingDeleteId = reminderId;
+  document.getElementById("delete-confirm").classList.remove("hidden");
+}
+
+function closeDeletePopup() {
+  pendingDeleteId = null;
+  document.getElementById("delete-confirm").classList.add("hidden");
+}
+
+document.getElementById("confirm-yes").addEventListener("click", async () => {
+  if (!pendingDeleteId) return;
+
+  await deleteReminder(auth.currentUser.uid, pendingDeleteId);
+
+  closeDeletePopup();
+});
+
+document.getElementById("confirm-no").addEventListener("click", () => {
+  closeDeletePopup();
+});
+
+async function deleteReminder(uid, reminderId) {
+  const ref = doc(db, "users", uid, "reminders", reminderId);
+  await deleteDoc(ref);
+}
+
+// ---------------------------------
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log("Logged in user:", user.uid);
@@ -1444,6 +1494,12 @@ const searchBar = document.getElementById("reminder-search-bar");
 const popup = document.getElementById("reminder-popup");
 const titleInput = document.getElementById("reminder-title");
 const form = document.getElementById("add-reminder-form");
+const submitBtn = document.getElementById("reminder-submit");
+
+titleInput.addEventListener("input", () => {
+  const hasText = titleInput.value.trim().length > 0;
+  submitBtn.disabled = !hasText;
+});
 
 // Show popup when search bar clicked
 searchBar.addEventListener("click", () => {
