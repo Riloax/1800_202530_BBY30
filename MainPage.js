@@ -1350,7 +1350,7 @@ function listenUserReminders(userId, callback) {
     snapshot.forEach((doc) => {
       reminders.push({ id: doc.id, ...doc.data() });
     });
-    callback(reminders); // pass the array to your UI renderer
+    callback(reminders); // pass the array to UI renderer
   });
 }
 
@@ -1363,74 +1363,219 @@ async function toggleReminderCompleted(userId, reminderId, currentState) {
   });
 }
 
+function createReminderCard(reminder, isPast = false) {
+  const card = document.createElement("div");
+  card.className = "reminder-card";
+  if (reminder.is_completed) card.classList.add("completed");
+
+  // Checkbox
+  const checkbox = document.createElement("div");
+  checkbox.className = "checkbox-circle";
+  if (reminder.is_completed) checkbox.classList.add("checked");
+  checkbox.addEventListener("click", (e) => {
+    e.stopPropagation();
+    checkbox.classList.toggle("checked");
+    card.classList.toggle("completed");
+    toggleReminderCompleted(
+      auth.currentUser.uid,
+      reminder.id,
+      reminder.is_completed
+    );
+  });
+
+  // Content
+  const content = document.createElement("div");
+  content.className = "reminder-content";
+
+  const title = document.createElement("div");
+  title.className = "reminder-title";
+  title.textContent = reminder.title;
+
+  const due = document.createElement("div");
+  due.className = "reminder-due";
+
+  const finished = document.createElement("div");
+  finished.className = "reminder-finished";
+
+  if (reminder.due_date) {
+    const date = reminder.due_date.toDate
+      ? reminder.due_date.toDate()
+      : new Date(reminder.due_date);
+    due.textContent = date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+
+    // Red text if past
+    if (isPast) {
+      due.style.color = "rgba(219, 52, 52, 0.81)";
+    }
+  }
+
+  // Estimate
+  const estimate = document.createElement("div");
+  estimate.className = "reminder-estimate";
+  estimate.textContent = reminder.estimate_minutes
+    ? "Est: " + reminder.estimate_minutes + " min"
+    : "";
+
+  // Delete button
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "reminder-delete-btn";
+  deleteBtn.textContent = "×";
+  deleteBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openDeletePopup(reminder.id);
+  });
+
+  // Add finished time if completed
+  if (reminder.is_completed && reminder.finished_at) {
+    const finishedAt = reminder.finished_at.toDate
+      ? reminder.finished_at.toDate()
+      : new Date(reminder.finished_at);
+
+    finished.textContent =
+      "Completed: " +
+      finishedAt.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }) +
+      ", " +
+      finishedAt.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+  }
+
+  content.appendChild(title);
+  content.appendChild(due);
+  if (finished.textContent) {
+    content.appendChild(finished);
+  }
+
+  card.appendChild(checkbox);
+  card.appendChild(content);
+  card.appendChild(estimate);
+  card.appendChild(deleteBtn);
+
+  return card;
+}
+
 function renderReminders(reminders) {
   const listEl = document.getElementById("reminder-list");
   listEl.innerHTML = "";
 
+  const now = new Date();
+
+  // Sort reminders by due date (nulls last)
+  reminders.sort((a, b) => {
+    const dateA = a.due_date
+      ? a.due_date.toDate
+        ? a.due_date.toDate()
+        : new Date(a.due_date)
+      : null;
+    const dateB = b.due_date
+      ? b.due_date.toDate
+        ? b.due_date.toDate()
+        : new Date(b.due_date)
+      : null;
+
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return 1;
+    if (!dateB) return -1;
+    return dateA - dateB;
+  });
+
+  // Split sections
+  const pastReminders = [];
+  const ongoingReminders = [];
+  const noAlertReminders = [];
+  const completedReminders = [];
+
   reminders.forEach((reminder) => {
-    // Card container
-    const card = document.createElement("div");
-    card.className = "reminder-card";
-
-    // Left: checkbox
-    const checkbox = document.createElement("div");
-    checkbox.className = "checkbox-circle";
-    if (reminder.is_completed) checkbox.classList.add("checked");
-
-    // Right: title + due date
-    const content = document.createElement("div");
-    content.className = "reminder-content";
-
-    const title = document.createElement("div");
-    title.className = "reminder-title";
-    title.textContent = reminder.title;
-
-    const due = document.createElement("div");
-    due.className = "reminder-due";
-    const estimate = document.createElement("div");
-    estimate.className = "reminder-estimate";
-
-    if (reminder.estimate_minutes) {
-    estimate.textContent = reminder.estimate_minutes + " min";
-    } else {
-    estimate.textContent = "";
-      }
-
-    if (reminder.due_date) {
-      const date = reminder.due_date.toDate
+    if (reminder.is_completed) {
+      completedReminders.push(reminder);
+    } else if (reminder.due_date) {
+      const due = reminder.due_date.toDate
         ? reminder.due_date.toDate()
         : new Date(reminder.due_date);
-      due.textContent = date.toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      });
+      if (due < now.setHours(0, 0, 0, 0)) pastReminders.push(reminder);
+      else ongoingReminders.push(reminder);
     } else {
-      due.textContent = "";
+      noAlertReminders.push(reminder);
     }
-
-    content.appendChild(title);
-    content.appendChild(due);
-    content.appendChild(estimate);
-
-
-    // Combine checkbox + content
-    card.appendChild(checkbox);
-    card.appendChild(content);
-
-    // Click to toggle completion
-    card.addEventListener("click", () => {
-      toggleReminderCompleted(
-        auth.currentUser.uid,
-        reminder.id,
-        reminder.is_completed
-      );
-    });
-
-    listEl.appendChild(card);
   });
+
+  // Sort completed by finished_at (newest first)
+  completedReminders.sort((a, b) => {
+    const fA = a.finished_at
+      ? a.finished_at.toDate
+        ? a.finished_at.toDate()
+        : new Date(a.finished_at)
+      : new Date(0);
+    const fB = b.finished_at
+      ? b.finished_at.toDate
+        ? b.finished_at.toDate()
+        : new Date(b.finished_at)
+      : new Date(0);
+    return fB - fA; // newest first
+  });
+
+  // Helper to render a section
+  function renderSection(title, arr, isPast = false) {
+    if (arr.length === 0) return;
+
+    const divider = document.createElement("div");
+    divider.className = "reminder-section-divider";
+    divider.textContent = title;
+    listEl.appendChild(divider);
+
+    arr.forEach((reminder) => {
+      const card = createReminderCard(reminder, isPast);
+      listEl.appendChild(card);
+    });
+  }
+
+  // Render all sections
+  renderSection("Past", pastReminders, true);
+  renderSection("Ongoing", ongoingReminders);
+  renderSection("No alert", noAlertReminders);
+  renderSection("Completed", completedReminders);
 }
 
+// delete reminder
+let pendingDeleteId = null;
+
+function openDeletePopup(reminderId) {
+  pendingDeleteId = reminderId;
+  document.getElementById("delete-confirm").classList.remove("hidden");
+}
+
+function closeDeletePopup() {
+  pendingDeleteId = null;
+  document.getElementById("delete-confirm").classList.add("hidden");
+}
+
+document.getElementById("confirm-yes").addEventListener("click", async () => {
+  if (!pendingDeleteId) return;
+
+  await deleteReminder(auth.currentUser.uid, pendingDeleteId);
+
+  closeDeletePopup();
+});
+
+document.getElementById("confirm-no").addEventListener("click", () => {
+  closeDeletePopup();
+});
+
+async function deleteReminder(uid, reminderId) {
+  const ref = doc(db, "users", uid, "reminders", reminderId);
+  await deleteDoc(ref);
+}
+
+// ---------------------------------
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log("Logged in user:", user.uid);
@@ -1444,6 +1589,12 @@ const searchBar = document.getElementById("reminder-search-bar");
 const popup = document.getElementById("reminder-popup");
 const titleInput = document.getElementById("reminder-title");
 const form = document.getElementById("add-reminder-form");
+const submitBtn = document.getElementById("reminder-submit");
+
+titleInput.addEventListener("input", () => {
+  const hasText = titleInput.value.trim().length > 0;
+  submitBtn.disabled = !hasText;
+});
 
 // Show popup when search bar clicked
 searchBar.addEventListener("click", () => {
