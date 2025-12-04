@@ -99,8 +99,8 @@
           <input type="time" id="taskStartTime" step="300" required />
         </div>
         <div class="form-group">
-          <label for="taskTime">End Time (Optional)</label>
-          <input type="time" id="taskTime" step="300" />
+          <label for="taskTime">End Time</label>
+          <input type="time" id="taskTime" step="300" required />
         </div>
         <div class="modal-buttons">
           <button type="button" class="modal-btn cancel-btn" id="cancelBtn">
@@ -208,9 +208,15 @@
     </div>
 
     <!-- Reminder list -->
-    <div class="reminder-container">
+    <div class="reminder-container" id="reminder-container">
       <div id="reminder-list"></div>
     </div>
+
+    <!-- Group Reminder List -->
+    <div class="reminder-container hidden" id="group-reminder-container">
+      <div id="group-reminder-list"></div>
+    </div>
+
 
     <!-- Delete reminder confirm  -->
     <div id="delete-confirm" class="confirm-popup hidden">
@@ -224,7 +230,7 @@
     </div>
 
     <!-- Sticky bar at bottom -->
-    <div class="reminder-add-bar">
+    <div class="reminder-add-bar" id="reminder-add-bar">
       <input type="text" id="reminder-search-bar" placeholder="Add a reminder..." readonly />
     </div>
 
@@ -235,7 +241,7 @@
         <div class="form-main">
           <!-- Title -->
           <input type="text" id="reminder-title" placeholder="New reminder" required />
-          <button class="reminder-submit-btn" id="reminder-submit" type="submit" disabled>+</button>
+          <button class="reminder-submit-btn" id="reminder-submit" type="submit" disabled>&#10003;</button>
         </div>
         <hr />
         <!-- Due date -->
@@ -252,12 +258,57 @@
 
         <!-- Category -->
         <div class="form-row">
-          <label for="reminder-category">Category:</label>
+          <label for="reminder-category">
+            <spam style="color: #7e7e7e;">
+              Category: (Un-finished)
+            </spam>
+          </label>
           <button type="button" id="reminder-category">Select</button>
         </div>
       </form>
     </div>
 
+    <!-- =========================== -->
+    <!-- Group add bar -->
+    <!-- =========================== -->
+    <!-- Sticky bar at bottom -->
+    <div class="reminder-add-bar hidden" id="group-reminder-add-bar">
+      <input type="text" id="group-reminder-search-bar" placeholder="Add a reminder..." readonly />
+    </div>
+
+    <!-- Popup form (hidden by default) -->
+    <div id="group-reminder-popup" class="popup-form hidden">
+      <form id="group-add-reminder-form">
+        <!-- Submit -->
+        <div class="form-main">
+          <!-- Title -->
+          <input type="text" id="group-reminder-title" placeholder="New group reminder" required />
+          <button class="reminder-submit-btn" id="group-reminder-submit" type="submit" disabled>&#10003;</button>
+        </div>
+        <hr />
+        <!-- Due date -->
+        <div class="form-row">
+          <label for="reminder-due">Due Date:</label>
+          <input type="date" id="group-reminder-due" />
+        </div>
+
+        <!-- Estimate -->
+        <div class="form-row">
+          <label for="reminder-estimate">Estimate time (min):</label>
+          <input type="number" id="group-reminder-estimate" min="1" />
+        </div>
+
+        <!-- Category -->
+        <div class="form-row">
+          <label for="reminder-category">
+            <spam style="color: #7e7e7e;">
+              Category: (Un-finished)
+            </spam>
+          </label>
+          <button type="button" id="group-reminder-category">Select</button>
+        </div>
+      </form>
+    </div>
 
 
   </section>
