@@ -713,7 +713,24 @@ async function deleteTask(firestoreId) {
   if (!currentUser) return;
 
   try {
+    // 1️⃣ Delete the task document
     await deleteDoc(doc(db, "tasks", firestoreId));
+
+    // 2️⃣ Find any reminders that reference this task
+    const remindersRef = collection(db, "users", currentUser.uid, "reminders");
+    const q = query(remindersRef, where("eventLink", "==", firestoreId));
+    const snapshot = await getDocs(q);
+
+    // 3️⃣ Clear the eventLink for each reminder
+    for (const docSnap of snapshot.docs) {
+      await updateDoc(
+        doc(db, "users", currentUser.uid, "reminders", docSnap.id),
+        {
+          eventLink: null,
+        }
+      );
+    }
+
     showNotification("Task deleted successfully", "success");
   } catch (error) {
     console.error("Error deleting task:", error);
@@ -1337,9 +1354,11 @@ async function addReminder(
   if (!title) return console.error("Title is required");
   try {
     const remindersRef = collection(db, "users", userId, "reminders");
+    const due = dueDate ? endOfDayLocalFromDate(dueDate) : null;
+
     await addDoc(remindersRef, {
       title,
-      due_date: dueDate ? dueDate : null,
+      due_date: due,
       estimate_minutes: estimate,
       category,
       priority,
@@ -1353,6 +1372,19 @@ async function addReminder(
   } catch (error) {
     console.error("Error adding reminder:", error);
   }
+}
+
+function endOfDayLocalFromDate(d) {
+  const localDate = new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    d.getDate() + 1,
+    23,
+    59,
+    0,
+    0
+  );
+  return localDate;
 }
 
 function listenUserReminders(userId, callback) {
@@ -1795,17 +1827,6 @@ function createGroupReminderCard(reminder, isPast = false) {
     ? `Est: ${reminder.estimate_minutes} min`
     : "";
 
-  // Event Link
-  const eventLink = document.createElement("div");
-  eventLink.className = "reminder-eventLink";
-  if (reminder.eventLink) {
-    const link = document.createElement("a");
-    link.href = reminder.eventLink;
-    link.target = "_blank";
-    link.textContent = "Open Event Link";
-    eventLink.appendChild(link);
-  }
-
   // Delete button
   const deleteBtn = document.createElement("button");
   deleteBtn.className = "reminder-delete-btn";
@@ -1841,7 +1862,6 @@ function createGroupReminderCard(reminder, isPast = false) {
   card.appendChild(checkbox);
   card.appendChild(content);
   card.appendChild(estimate);
-  card.appendChild(eventLink);
   card.appendChild(deleteBtn);
 
   return card;
@@ -1886,13 +1906,13 @@ async function addGroupReminder(
 
     const groupData = groupSnap.data();
     const members = groupData.members || [];
-
+    const due = dueDate ? endOfDayLocalFromDate(dueDate) : null;
     // 2️⃣ Add reminder to canonical group_reminders
     const groupReminderRef = await addDoc(
       collection(db, "groups", groupId, "group_reminders"),
       {
         title,
-        due_date: dueDate || null,
+        due_date: due,
         estimate_minutes: estimate || null,
         priority,
         created_at: new Date(),
@@ -2025,3 +2045,327 @@ onAuthStateChanged(auth, (user) => {
     console.log("No user logged in yet");
   }
 });
+
+// auto schedule
+document
+  .getElementById("auto-schedule-btn")
+  .addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("No current user for auto-schedule");
+      return;
+    }
+
+    await autoSchedule(user.uid);
+  });
+
+async function getUncompletedReminders(userId) {
+  const remindersRef = collection(db, "users", userId, "reminders");
+  const q = query(
+    remindersRef,
+    where("completed", "==", false),
+    where("alert", "==", true)
+  );
+  const snap = await getDocs(q);
+
+  let reminders = [];
+
+  snap.forEach((doc) => {
+    const data = doc.data();
+    if (data.estimateTime && data.dueDate) {
+      // ignore ones without estimate time
+      reminders.push({
+        id: doc.id,
+        ...data,
+      });
+    }
+  });
+
+  return reminders;
+}
+
+async function getExistingTasks(userId) {
+  const tasksRef = collection(db, "tasks");
+  const q = query(tasksRef, where("userId", "==", userId));
+  const snap = await getDocs(q);
+
+  let tasks = [];
+
+  snap.forEach((doc) => {
+    tasks.push({
+      id: doc.id,
+      ...doc.data(),
+    });
+  });
+
+  return tasks;
+}
+
+function getDaySlots(dateStr) {
+  const slots = [];
+  let start = dayjs(dateStr + " 18:00");
+  let end = dayjs(dateStr + " 23:59");
+
+  while (start.isBefore(end)) {
+    const next = start.add(30, "minute");
+    slots.push({
+      start,
+      end: next,
+    });
+    start = next;
+  }
+  return slots;
+}
+function blockOccupiedSlots(slots, tasks, dateStr) {
+  const dayTasks = tasks.filter((t) => t.date === dateStr);
+
+  return slots.filter((slot) => {
+    return !dayTasks.some((t) => {
+      const taskStart = dayjs(t.date + " " + t.startTime);
+      const taskEnd = dayjs(t.date + " " + t.endTime);
+
+      return slot.start.isBefore(taskEnd) && slot.end.isAfter(taskStart);
+    });
+  });
+}
+
+async function autoSchedule(userId) {
+  if (!userId) {
+    console.error("autoSchedule: missing userId");
+    return;
+  }
+
+  console.log("Start auto-schedule...");
+
+  // 1️⃣ Load reminders and tasks
+  const reminders = await getUnscheduledReminders(userId); // reminders with due date and estimate
+  const tasks = await getExistingTasks(userId); // all tasks
+
+  console.log("Loaded reminders:", reminders.length);
+  console.log("Loaded tasks:", tasks.length);
+
+  // 2️⃣ Build busy slots map
+  const busy = buildBusySlots(tasks); // { date: [{start, end}, ...] }
+
+  // 3️⃣ Sort reminders: overdue first, then nearest due date
+  const now = new Date();
+  reminders.sort((a, b) => {
+    const da = new Date(a.dueDate);
+    const db = new Date(b.dueDate);
+    return da - db;
+  });
+
+  for (const r of reminders) {
+    const duration = r.estimate;
+    if (!r.dueDate || !duration) continue;
+
+    const dueDateObj = new Date(r.dueDate);
+    const today = new Date();
+    let iterDate = new Date(Math.min(today.getTime(), dueDateObj.getTime())); // start today or overdue
+
+    let scheduled = false;
+    while (iterDate <= dueDateObj && !scheduled) {
+      const dateStr = iterDate.toISOString().slice(0, 10);
+
+      const slot = findSlotForEstimate(busy, dateStr, duration);
+
+      if (slot) {
+        let taskId;
+        if (r.eventLink) {
+          await updateTask(r.eventLink, {
+            date: dateStr,
+            startTime: slot.start,
+            endTime: slot.end,
+            category: "work",
+          });
+          taskId = r.eventLink;
+          console.log("Updated task:", r.title);
+        } else {
+          taskId = await createTask({
+            userId,
+            name: r.title,
+            date: dateStr,
+            startTime: slot.start,
+            endTime: slot.end,
+            category: "work",
+          });
+          await updateReminderLink(userId, r, taskId);
+          console.log("Created task:", r.title);
+        }
+
+        if (!busy[dateStr]) busy[dateStr] = [];
+        busy[dateStr].push({ start: slot.start, end: slot.end });
+
+        scheduled = true;
+      }
+
+      iterDate.setDate(iterDate.getDate() + 1);
+    }
+
+    if (!scheduled) {
+      console.log("No space to schedule reminder:", r.title);
+    }
+  }
+
+  console.log("Auto schedule complete");
+}
+
+async function createTask({ userId, name, date, startTime, endTime }) {
+  const taskData = {
+    userId,
+    name,
+    category: "work", // default
+    date,
+    startTime,
+    time: endTime,
+    createdAt: new Date(),
+  };
+
+  const ref = await addDoc(collection(db, "tasks"), taskData);
+  return ref.id;
+}
+
+async function updateTask(taskId, { date, startTime, endTime }) {
+  await updateDoc(doc(db, "tasks", taskId), {
+    date,
+    startTime,
+    time: endTime,
+  });
+}
+
+async function updateReminderLink(userId, reminder, taskId) {
+  const id = reminder.id;
+  const path =
+    reminder.type === "group"
+      ? doc(db, "users", userId, "group_reminders", id)
+      : doc(db, "users", userId, "reminders", id);
+
+  await updateDoc(path, { eventLink: taskId, updated_at: new Date() });
+}
+
+// Build busy slots from existing tasks
+function buildBusySlots(tasks) {
+  const slots = {};
+  for (const task of tasks) {
+    const { date, startTime, time } = task;
+    if (!slots[date]) slots[date] = [];
+    slots[date].push({ start: startTime, end: time });
+  }
+  return slots;
+}
+
+function findSlotForEstimate(busy, date, duration) {
+  const startOfDay = 18 * 60; // 18:00 in minutes
+  const endOfDay = 24 * 60; // 24:00 in minutes
+
+  if (!busy[date]) busy[date] = [];
+
+  // Convert existing slots to minutes and sort
+  const slots = busy[date].map((s) => ({
+    start: timeToMinutes(s.start),
+    end: timeToMinutes(s.end),
+  }));
+  slots.sort((a, b) => a.start - b.start);
+
+  // Add a dummy slot at the end of day
+  slots.push({ start: endOfDay, end: endOfDay });
+
+  let cursor = startOfDay;
+
+  for (const slot of slots) {
+    // While there is space before this busy slot
+    while (cursor + duration <= slot.start) {
+      // We found a free slot
+      return {
+        start: minutesToTime(cursor),
+        end: minutesToTime(cursor + duration),
+      };
+    }
+    // Move cursor to end of this busy slot
+    cursor = Math.max(cursor, slot.end);
+  }
+
+  // If no slot found today, return null
+  return null;
+}
+
+// Helper: convert "HH:MM" to minutes
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
+}
+
+// --- Helper: convert minutes -> HH:MM ---
+function minutesToTime(minutes) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+async function getUnscheduledReminders(userId) {
+  if (!userId) {
+    console.error("No userId found in getUnscheduledReminders");
+    return [];
+  }
+
+  const personalRef = collection(db, "users", userId, "reminders");
+  const groupRef = collection(db, "users", userId, "group_reminders");
+
+  const [personalSnap, groupSnap] = await Promise.all([
+    getDocs(personalRef),
+    getDocs(groupRef),
+  ]);
+
+  const reminders = [];
+
+  // PERSONAL
+  personalSnap.forEach((doc) => {
+    const data = doc.data();
+
+    if (!data.is_completed && data.due_date && data.estimate_minutes) {
+      reminders.push({
+        id: doc.id,
+        title: data.title,
+        dueDate: normalizeDate(data.due_date),
+        estimate: data.estimate_minutes,
+        eventLink: data.eventLink || null,
+        type: "personal",
+      });
+    }
+  });
+
+  // GROUP
+  groupSnap.forEach((doc) => {
+    const data = doc.data();
+
+    if (!data.is_completed && data.due_date && data.estimate_minutes) {
+      reminders.push({
+        id: doc.id,
+        title: data.title,
+        dueDate: normalizeDate(data.due_date),
+        estimate: data.estimate_minutes,
+        eventLink: data.eventLink || null,
+        type: "group",
+      });
+    }
+  });
+
+  return reminders;
+}
+
+function normalizeDate(d) {
+  if (!d) return null;
+
+  // Firestore Timestamp
+  if (d.toDate) {
+    const date = d.toDate();
+    return date.toISOString().split("T")[0]; // "YYYY-MM-DD"
+  }
+
+  // string already
+  if (typeof d === "string") {
+    return d.split("T")[0]; // safe trim
+  }
+
+  return null;
+}

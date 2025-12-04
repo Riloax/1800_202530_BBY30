@@ -103,7 +103,9 @@ body {
   flex-grow: 1;
   user-select: none;
   cursor: default;
-  padding-right: 45px;
+  /* padding-right: 45px; */
+  position: absolute;
+  left: 30%;
 }
 
 .app-logo {
@@ -111,8 +113,33 @@ body {
   margin-left: 10px;
   object-fit: contain;
   pointer-events: none; /* avoids blocking clicks */
+  /* transform: translateX(100px); */
 }
 
+/* Auto Schedule Button */
+.auto-schedule {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 10px 15px;
+  margin-right: 30px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.auto-schedule:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.auto-schedule:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
 /* ============================================
    DROPDOWN MENU
    ============================================ */
