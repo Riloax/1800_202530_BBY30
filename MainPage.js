@@ -16,6 +16,8 @@ import {
   setDoc,
   getDoc,
   getDocs,
+  writeBatch,
+  serverTimestamp,
 } from "firebase/firestore";
 
 // ============================================
@@ -1278,6 +1280,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 const switchButtons = document.querySelectorAll(".reminder-switch button");
 const switchPill = document.querySelector(".switch-pill");
+const reminderList = document.getElementById("reminder-container");
+const reminderAddBar = document.getElementById("reminder-add-bar");
+const groupReminderList = document.getElementById("group-reminder-container");
+const groupReminderAddBar = document.getElementById("group-reminder-add-bar");
 
 switchButtons.forEach((btn, index) => {
   btn.addEventListener("click", () => {
@@ -1290,10 +1296,21 @@ switchButtons.forEach((btn, index) => {
       // Personal
       switchPill.classList.remove("right");
       switchPill.classList.add("left");
+
+      reminderList.classList.remove("hidden");
+      reminderAddBar.classList.remove("hidden");
+
+      groupReminderList.classList.add("hidden");
+      groupReminderAddBar.classList.add("hidden");
     } else {
       // Group
       switchPill.classList.remove("left");
       switchPill.classList.add("right");
+      reminderList.classList.add("hidden");
+      reminderAddBar.classList.add("hidden");
+
+      groupReminderList.classList.remove("hidden");
+      groupReminderAddBar.classList.remove("hidden");
     }
 
     // later you can use this to change content
@@ -1561,7 +1578,12 @@ function closeDeletePopup() {
 document.getElementById("confirm-yes").addEventListener("click", async () => {
   if (!pendingDeleteId) return;
 
-  await deleteReminder(auth.currentUser.uid, pendingDeleteId);
+  try {
+    await deleteReminder(auth.currentUser.uid, pendingDeleteId);
+  } catch (error) {}
+  try {
+    await deleteGroupReminder(auth.currentUser.uid, pendingDeleteId);
+  } catch (error) {}
 
   closeDeletePopup();
 });
@@ -1575,15 +1597,15 @@ async function deleteReminder(uid, reminderId) {
   await deleteDoc(ref);
 }
 
-// ---------------------------------
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("Logged in user:", user.uid);
-    listenUserReminders(user.uid, renderReminders);
-  } else {
-    console.log("No user logged in yet");
+async function deleteGroupReminder(userId, reminderId) {
+  try {
+    const ref = doc(db, "users", userId, "group_reminders", reminderId);
+    await deleteDoc(ref);
+    console.log("Group reminder deleted for user:", userId);
+  } catch (error) {
+    console.error("Error deleting user group reminder:", error);
   }
-});
+}
 
 const searchBar = document.getElementById("reminder-search-bar");
 const popup = document.getElementById("reminder-popup");
@@ -1636,4 +1658,370 @@ form.addEventListener("submit", (e) => {
 
   form.reset();
   popup.classList.add("hidden");
+});
+
+// Group reminder
+function renderGroupReminders(reminders) {
+  const listEl = document.getElementById("group-reminder-list");
+  listEl.innerHTML = "";
+
+  const now = new Date();
+
+  // Sort by due_date
+  reminders.sort((a, b) => {
+    const dateA = a.due_date
+      ? a.due_date.toDate
+        ? a.due_date.toDate()
+        : new Date(a.due_date)
+      : null;
+    const dateB = b.due_date
+      ? b.due_date.toDate
+        ? b.due_date.toDate()
+        : new Date(b.due_date)
+      : null;
+
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return 1;
+    if (!dateB) return -1;
+    return dateA - dateB;
+  });
+
+  // Split sections
+  const pastReminders = [],
+    ongoingReminders = [],
+    noAlertReminders = [],
+    completedReminders = [];
+
+  reminders.forEach((reminder) => {
+    if (reminder.is_completed) {
+      completedReminders.push(reminder);
+    } else if (reminder.due_date) {
+      const due = reminder.due_date.toDate
+        ? reminder.due_date.toDate()
+        : new Date(reminder.due_date);
+      if (due < now.setHours(0, 0, 0, 0)) pastReminders.push(reminder);
+      else ongoingReminders.push(reminder);
+    } else {
+      noAlertReminders.push(reminder);
+    }
+  });
+
+  // Sort completed by finished_at
+  completedReminders.sort((a, b) => {
+    const fA = a.finished_at
+      ? a.finished_at.toDate
+        ? a.finished_at.toDate()
+        : new Date(a.finished_at)
+      : new Date(0);
+    const fB = b.finished_at
+      ? b.finished_at.toDate
+        ? b.finished_at.toDate()
+        : new Date(b.finished_at)
+      : new Date(0);
+    return fB - fA;
+  });
+
+  function renderSection(title, arr, isPast = false) {
+    if (!arr.length) return;
+    const divider = document.createElement("div");
+    divider.className = "reminder-section-divider";
+    divider.textContent = title;
+    listEl.appendChild(divider);
+
+    arr.forEach((reminder) => {
+      const card = createGroupReminderCard(reminder, isPast);
+      listEl.appendChild(card);
+    });
+  }
+
+  renderSection("Past", pastReminders, true);
+  renderSection("Ongoing", ongoingReminders);
+  renderSection("No alert", noAlertReminders);
+  renderSection("Completed", completedReminders);
+}
+
+function createGroupReminderCard(reminder, isPast = false) {
+  const card = document.createElement("div");
+  card.className = "reminder-card";
+  if (reminder.is_completed) card.classList.add("completed");
+
+  // Checkbox
+  const checkbox = document.createElement("div");
+  checkbox.className = "checkbox-circle group";
+  if (reminder.is_completed) checkbox.classList.add("checked");
+  checkbox.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    checkbox.classList.toggle("checked");
+    card.classList.toggle("completed");
+
+    await toggleGroupReminderCompleted(
+      auth.currentUser.uid,
+      reminder.id,
+      reminder.is_completed
+    );
+    reminder.is_completed = !reminder.is_completed;
+  });
+
+  // Content
+  const content = document.createElement("div");
+  content.className = "reminder-content";
+
+  const title = document.createElement("div");
+  title.className = "reminder-title";
+  title.textContent = reminder.title;
+
+  const due = document.createElement("div");
+  due.className = "reminder-due";
+
+  const finished = document.createElement("div");
+  finished.className = "reminder-finished";
+
+  if (reminder.due_date) {
+    const date = reminder.due_date.toDate
+      ? reminder.due_date.toDate()
+      : new Date(reminder.due_date);
+    due.textContent = date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    if (isPast) due.style.color = "rgba(219, 52, 52, 0.81)";
+  }
+
+  // Estimate
+  const estimate = document.createElement("div");
+  estimate.className = "reminder-estimate";
+  estimate.textContent = reminder.estimate_minutes
+    ? `Est: ${reminder.estimate_minutes} min`
+    : "";
+
+  // Event Link
+  const eventLink = document.createElement("div");
+  eventLink.className = "reminder-eventLink";
+  if (reminder.eventLink) {
+    const link = document.createElement("a");
+    link.href = reminder.eventLink;
+    link.target = "_blank";
+    link.textContent = "Open Event Link";
+    eventLink.appendChild(link);
+  }
+
+  // Delete button
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "reminder-delete-btn";
+  deleteBtn.textContent = "×";
+  deleteBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    openDeletePopup(reminder.id);
+  });
+
+  if (reminder.is_completed && reminder.finished_at) {
+    const finishedAt = reminder.finished_at.toDate
+      ? reminder.finished_at.toDate()
+      : new Date(reminder.finished_at);
+
+    finished.textContent =
+      "Completed: " +
+      finishedAt.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }) +
+      ", " +
+      finishedAt.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+  }
+
+  content.appendChild(title);
+  content.appendChild(due);
+  content.appendChild(finished);
+
+  card.appendChild(checkbox);
+  card.appendChild(content);
+  card.appendChild(estimate);
+  card.appendChild(eventLink);
+  card.appendChild(deleteBtn);
+
+  return card;
+}
+
+function listenUserGroupReminders(userId, callback) {
+  const remindersRef = collection(db, "users", userId, "group_reminders");
+  const q = query(remindersRef, orderBy("due_date", "asc"));
+
+  onSnapshot(q, (snapshot) => {
+    const reminders = [];
+    snapshot.forEach((doc) => reminders.push({ id: doc.id, ...doc.data() }));
+    callback(reminders);
+  });
+}
+
+async function toggleGroupReminderCompleted(userId, reminderId, currentState) {
+  const reminderRef = doc(db, "users", userId, "group_reminders", reminderId);
+  await updateDoc(reminderRef, {
+    is_completed: !currentState,
+    finished_at: !currentState ? new Date() : null,
+    updated_at: new Date(),
+  });
+}
+
+async function addGroupReminder(
+  userId,
+  groupId,
+  { title, dueDate = null, estimate = null, priority = 3 }
+) {
+  if (!title) return console.error("Title is required");
+
+  try {
+    // 1️⃣ Get group document by ID
+    const groupRef = doc(db, "groups", groupId);
+    const groupSnap = await getDoc(groupRef);
+
+    if (!groupSnap.exists()) {
+      console.error("Group not found:", groupId);
+      return;
+    }
+
+    const groupData = groupSnap.data();
+    const members = groupData.members || [];
+
+    // 2️⃣ Add reminder to canonical group_reminders
+    const groupReminderRef = await addDoc(
+      collection(db, "groups", groupId, "group_reminders"),
+      {
+        title,
+        due_date: dueDate || null,
+        estimate_minutes: estimate || null,
+        priority,
+        created_at: new Date(),
+        updated_at: new Date(),
+        created_by: userId,
+      }
+    );
+
+    const reminderId = groupReminderRef.id;
+
+    // 3️⃣ Fan-out to each user
+    for (const memberId of members) {
+      await setDoc(doc(db, "users", memberId, "group_reminders", reminderId), {
+        title,
+        due_date: dueDate || null,
+        estimate_minutes: estimate || null,
+        priority,
+        created_at: new Date(),
+        updated_at: new Date(),
+        group_id: groupId,
+        reminder_id: reminderId,
+        is_completed: false,
+        finished_at: null,
+        eventLink: null,
+      });
+    }
+
+    console.log("Group reminder added successfully!");
+  } catch (error) {
+    console.error("Error adding group reminder:", error);
+  }
+}
+
+// =============================
+// Group Reminder Add UI
+// =============================
+
+// Elements
+const groupSearchBar = document.getElementById("group-reminder-search-bar");
+const groupPopup = document.getElementById("group-reminder-popup");
+const groupTitleInput = document.getElementById("group-reminder-title");
+const groupForm = document.getElementById("group-add-reminder-form");
+const groupSubmitBtn = document.getElementById("group-reminder-submit");
+
+// Disable/enable submit based on input text
+groupTitleInput.addEventListener("input", () => {
+  const hasText = groupTitleInput.value.trim().length > 0;
+  groupSubmitBtn.disabled = !hasText;
+});
+
+// Show popup when search bar clicked
+groupSearchBar.addEventListener("click", () => {
+  groupPopup.classList.remove("hidden");
+
+  // Focus title input as soon as popup opens
+  setTimeout(() => {
+    groupTitleInput.focus();
+  }, 0);
+});
+
+// Close popup when clicking outside the form
+document.addEventListener("click", (e) => {
+  if (!groupPopup.contains(e.target) && e.target !== groupSearchBar) {
+    groupPopup.classList.add("hidden");
+  }
+});
+
+// Handle form submission
+groupForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  // Get values
+  const title = document.getElementById("group-reminder-title").value;
+  const dueDateValue = document.getElementById("group-reminder-due").value;
+  const estimateValue = document.getElementById(
+    "group-reminder-estimate"
+  ).value;
+
+  const dueDate = dueDateValue ? new Date(dueDateValue) : null;
+  const estimate = estimateValue ? parseInt(estimateValue) : null;
+
+  // placeholder category
+  const category = "General";
+
+  // Get user + group info
+  const user = auth.currentUser;
+  if (!user) {
+    console.error("No user logged in");
+    return;
+  }
+
+  // ★ Replace this with your actual selected group
+  const groupId = window.currentGroupId || "VH20KHJeRtMZMZh87UKe";
+
+  try {
+    await addGroupReminder(user.uid, groupId, {
+      title,
+      dueDate,
+      estimate,
+      category,
+    });
+
+    console.log("Group reminder added!");
+  } catch (err) {
+    console.error("Error adding group reminder:", err);
+  }
+
+  groupForm.reset();
+  groupPopup.classList.add("hidden");
+});
+
+// ---------------------------------
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("Logged in user:", user.uid);
+
+    // Now it's safe to call
+    const userId = user.uid;
+    const groupCode = "V85REVD7";
+
+    // addGroupReminder(userId, groupCode, {
+    //   title: "Team Sync Meeting",
+    //   dueDate: new Date("2025-12-06T10:30:00"),
+    //   estimate: 45,
+    //   priority: 3,
+    // });
+    listenUserReminders(user.uid, renderReminders);
+    listenUserGroupReminders(user.uid, renderGroupReminders);
+  } else {
+    console.log("No user logged in yet");
+  }
 });
