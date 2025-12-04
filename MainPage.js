@@ -1337,9 +1337,11 @@ async function addReminder(
   if (!title) return console.error("Title is required");
   try {
     const remindersRef = collection(db, "users", userId, "reminders");
+    const due = dueDate ? endOfDayLocalFromDate(dueDate) : null;
+
     await addDoc(remindersRef, {
       title,
-      due_date: dueDate ? dueDate : null,
+      due_date: due,
       estimate_minutes: estimate,
       category,
       priority,
@@ -1353,6 +1355,19 @@ async function addReminder(
   } catch (error) {
     console.error("Error adding reminder:", error);
   }
+}
+
+function endOfDayLocalFromDate(d) {
+  const localDate = new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    d.getDate() + 1,
+    23,
+    59,
+    0,
+    0
+  );
+  return localDate;
 }
 
 function listenUserReminders(userId, callback) {
@@ -1886,13 +1901,13 @@ async function addGroupReminder(
 
     const groupData = groupSnap.data();
     const members = groupData.members || [];
-
+    const due = dueDate ? endOfDayLocalFromDate(dueDate) : null;
     // 2️⃣ Add reminder to canonical group_reminders
     const groupReminderRef = await addDoc(
       collection(db, "groups", groupId, "group_reminders"),
       {
         title,
-        due_date: dueDate || null,
+        due_date: due,
         estimate_minutes: estimate || null,
         priority,
         created_at: new Date(),
