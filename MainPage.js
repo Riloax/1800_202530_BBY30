@@ -713,29 +713,39 @@ async function deleteTask(firestoreId) {
   if (!currentUser) return;
 
   try {
-    // 1️⃣ Delete the task document
+    // 1. Delete the task
     await deleteDoc(doc(db, "tasks", firestoreId));
 
-    // 2️⃣ Find any reminders that reference this task
-    const remindersRef = collection(db, "users", currentUser.uid, "reminders");
-    const q = query(remindersRef, where("eventLink", "==", firestoreId));
-    const snapshot = await getDocs(q);
-
-    // 3️⃣ Clear the eventLink for each reminder
-    for (const docSnap of snapshot.docs) {
-      await updateDoc(
-        doc(db, "users", currentUser.uid, "reminders", docSnap.id),
-        {
-          eventLink: null,
-        }
-      );
-    }
+    // 2. Clear references from reminders + group_reminders
+    await clearEventLink(currentUser.uid, "reminders", firestoreId);
+    await clearEventLink(currentUser.uid, "group_reminders", firestoreId);
 
     showNotification("Task deleted successfully", "success");
   } catch (error) {
     console.error("Error deleting task:", error);
     showNotification("Failed to delete task", "error");
   }
+}
+
+async function clearEventLink(userId, collectionName, firestoreId) {
+  const ref = collection(db, "users", userId, collectionName);
+  const q = query(ref, where("eventLink", "==", firestoreId));
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    console.log(`[${collectionName}] No reminders to clear.`);
+    return;
+  }
+
+  for (const docSnap of snapshot.docs) {
+    await updateDoc(doc(db, "users", userId, collectionName, docSnap.id), {
+      eventLink: null,
+    });
+  }
+
+  console.log(
+    `[${collectionName}] Cleared eventLink for ${snapshot.docs.length} reminders`
+  );
 }
 
 /**
@@ -1412,6 +1422,9 @@ async function toggleReminderCompleted(userId, reminderId, currentState) {
   });
 }
 
+/* ============================================
+   REMINDER CARD
+   ============================================ */
 function createReminderCard(reminder, isPast = false) {
   const card = document.createElement("div");
   card.className = "reminder-card";
@@ -1512,6 +1525,9 @@ function createReminderCard(reminder, isPast = false) {
   return card;
 }
 
+/* ============================================
+   RENDER REMINDER 
+   ============================================ */
 function renderReminders(reminders) {
   const listEl = document.getElementById("reminder-list");
   listEl.innerHTML = "";
@@ -1594,6 +1610,9 @@ function renderReminders(reminders) {
   renderSection("Completed", completedReminders);
 }
 
+/* ============================================
+   DELETE REMINDER 
+   ============================================ */
 // delete reminder
 let pendingDeleteId = null;
 
@@ -1639,6 +1658,9 @@ async function deleteGroupReminder(userId, reminderId) {
   }
 }
 
+/* ============================================
+   REMINDER POP UP FORM
+   ============================================ */
 const searchBar = document.getElementById("reminder-search-bar");
 const popup = document.getElementById("reminder-popup");
 const titleInput = document.getElementById("reminder-title");
@@ -1653,6 +1675,7 @@ titleInput.addEventListener("input", () => {
 // Show popup when search bar clicked
 searchBar.addEventListener("click", () => {
   popup.classList.remove("hidden");
+  searchBar.classList.add("hidden");
   // Focus title input as soon as popup opens
   setTimeout(() => {
     titleInput.focus();
@@ -1663,6 +1686,7 @@ searchBar.addEventListener("click", () => {
 document.addEventListener("click", (e) => {
   if (!popup.contains(e.target) && e.target !== searchBar) {
     popup.classList.add("hidden");
+    searchBar.classList.remove("hidden");
   }
 });
 
@@ -1690,9 +1714,15 @@ form.addEventListener("submit", (e) => {
 
   form.reset();
   popup.classList.add("hidden");
+  searchBar.classList.remove("hidden");
 });
 
-// Group reminder
+/* ============================================
+   GROUP REMINDER 
+   ============================================ */
+/* ============================================
+   RENDER GROUP REMINDER
+   ============================================ */
 function renderGroupReminders(reminders) {
   const listEl = document.getElementById("group-reminder-list");
   listEl.innerHTML = "";
@@ -1772,6 +1802,9 @@ function renderGroupReminders(reminders) {
   renderSection("Completed", completedReminders);
 }
 
+/* ============================================
+   GROUP REMINDER CARD
+   ============================================ */
 function createGroupReminderCard(reminder, isPast = false) {
   const card = document.createElement("div");
   card.className = "reminder-card";
@@ -1887,6 +1920,9 @@ async function toggleGroupReminderCompleted(userId, reminderId, currentState) {
   });
 }
 
+/* ============================================
+   ADD GROUP REMINDER 
+   ============================================ */
 async function addGroupReminder(
   userId,
   groupId,
@@ -1947,7 +1983,7 @@ async function addGroupReminder(
 }
 
 // =============================
-// Group Reminder Add UI
+// Group Reminder POP UP FORM
 // =============================
 
 // Elements
@@ -1966,7 +2002,7 @@ groupTitleInput.addEventListener("input", () => {
 // Show popup when search bar clicked
 groupSearchBar.addEventListener("click", () => {
   groupPopup.classList.remove("hidden");
-
+  groupSearchBar.classList.add("hidden");
   // Focus title input as soon as popup opens
   setTimeout(() => {
     groupTitleInput.focus();
@@ -1977,6 +2013,7 @@ groupSearchBar.addEventListener("click", () => {
 document.addEventListener("click", (e) => {
   if (!groupPopup.contains(e.target) && e.target !== groupSearchBar) {
     groupPopup.classList.add("hidden");
+    groupSearchBar.classList.remove("hidden");
   }
 });
 
@@ -2022,23 +2059,13 @@ groupForm.addEventListener("submit", async (e) => {
 
   groupForm.reset();
   groupPopup.classList.add("hidden");
+  groupSearchBar.classList.remove("hidden");
 });
 
 // ---------------------------------
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log("Logged in user:", user.uid);
-
-    // Now it's safe to call
-    const userId = user.uid;
-    const groupCode = "V85REVD7";
-
-    // addGroupReminder(userId, groupCode, {
-    //   title: "Team Sync Meeting",
-    //   dueDate: new Date("2025-12-06T10:30:00"),
-    //   estimate: 45,
-    //   priority: 3,
-    // });
     listenUserReminders(user.uid, renderReminders);
     listenUserGroupReminders(user.uid, renderGroupReminders);
   } else {
@@ -2046,6 +2073,9 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+/* ============================================
+   AUTO SCHEDULE
+   ============================================ */
 // auto schedule
 document
   .getElementById("auto-schedule-btn")
@@ -2059,30 +2089,30 @@ document
     await autoSchedule(user.uid);
   });
 
-async function getUncompletedReminders(userId) {
-  const remindersRef = collection(db, "users", userId, "reminders");
-  const q = query(
-    remindersRef,
-    where("completed", "==", false),
-    where("alert", "==", true)
-  );
-  const snap = await getDocs(q);
+// async function getUncompletedReminders(userId) {
+//   const remindersRef = collection(db, "users", userId, "reminders");
+//   const q = query(
+//     remindersRef,
+//     where("completed", "==", false),
+//     where("alert", "==", true)
+//   );
+//   const snap = await getDocs(q);
 
-  let reminders = [];
+//   let reminders = [];
 
-  snap.forEach((doc) => {
-    const data = doc.data();
-    if (data.estimateTime && data.dueDate) {
-      // ignore ones without estimate time
-      reminders.push({
-        id: doc.id,
-        ...data,
-      });
-    }
-  });
+//   snap.forEach((doc) => {
+//     const data = doc.data();
+//     if (data.estimateTime && data.dueDate) {
+//       // ignore ones without estimate time
+//       reminders.push({
+//         id: doc.id,
+//         ...data,
+//       });
+//     }
+//   });
 
-  return reminders;
-}
+//   return reminders;
+// }
 
 async function getExistingTasks(userId) {
   const tasksRef = collection(db, "tasks");
@@ -2101,33 +2131,33 @@ async function getExistingTasks(userId) {
   return tasks;
 }
 
-function getDaySlots(dateStr) {
-  const slots = [];
-  let start = dayjs(dateStr + " 18:00");
-  let end = dayjs(dateStr + " 23:59");
+// function getDaySlots(dateStr) {
+//   const slots = [];
+//   let start = dayjs(dateStr + " 18:00");
+//   let end = dayjs(dateStr + " 23:59");
 
-  while (start.isBefore(end)) {
-    const next = start.add(30, "minute");
-    slots.push({
-      start,
-      end: next,
-    });
-    start = next;
-  }
-  return slots;
-}
-function blockOccupiedSlots(slots, tasks, dateStr) {
-  const dayTasks = tasks.filter((t) => t.date === dateStr);
+//   while (start.isBefore(end)) {
+//     const next = start.add(30, "minute");
+//     slots.push({
+//       start,
+//       end: next,
+//     });
+//     start = next;
+//   }
+//   return slots;
+// }
+// function blockOccupiedSlots(slots, tasks, dateStr) {
+//   const dayTasks = tasks.filter((t) => t.date === dateStr);
 
-  return slots.filter((slot) => {
-    return !dayTasks.some((t) => {
-      const taskStart = dayjs(t.date + " " + t.startTime);
-      const taskEnd = dayjs(t.date + " " + t.endTime);
+//   return slots.filter((slot) => {
+//     return !dayTasks.some((t) => {
+//       const taskStart = dayjs(t.date + " " + t.startTime);
+//       const taskEnd = dayjs(t.date + " " + t.endTime);
 
-      return slot.start.isBefore(taskEnd) && slot.end.isAfter(taskStart);
-    });
-  });
-}
+//       return slot.start.isBefore(taskEnd) && slot.end.isAfter(taskStart);
+//     });
+//   });
+// }
 
 async function autoSchedule(userId) {
   if (!userId) {

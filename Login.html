@@ -1,116 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="login.css">
-    <title>Todo Together Login</title>
-  </head>
 
-  <body>
-    <!-- Back Button -->
-    <button class="back-btn" onclick="window.location.href='index.html'">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
-      </svg>
-      Back
-    </button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="login.css">
+  <title>Todo Together Login</title>
+</head>
 
-    <!-- LOGIN PAGE -->
-    <div class="container">
-      <!-- Alert Message (EKLE BUNU) -->
-      <div id="authAlert" class="alert alert-danger d-none" role="alert"></div>
+<body>
+  <!-- Back Button -->
+  <button class="back-btn" onclick="window.location.href='index.html'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+    Back
+  </button>
 
-      <!-- Login Form -->
-      <div id="loginView">
-        <h2>Login</h2>
-        <form id="loginForm">
-          <div class="form-group">
-            <label for="loginEmail">Email</label>
-            <input
-              type="email"
-              id="loginEmail"
-              placeholder="example@email.com"
-              autocomplete="username"
-              value=""
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="loginPassword">Password</label>
-            <input
-              type="password"
-              id="loginPassword"
-              placeholder="Enter your password"
-              autocomplete="current-password"
-              required
-            />
-          </div>
-          <button type="submit" class="submit-btn">Submit</button>
-        </form>
-        <div class="toggle-text">
-          Don't have an account?
-          <a class="toggle-link" id="toSignup" href="#">Sign up</a>
+  <!-- LOGIN PAGE -->
+  <div class="container">
+    <!-- Alert Message (EKLE BUNU) -->
+    <div id="authAlert" class="alert alert-danger d-none" role="alert"></div>
+
+    <!-- Login Form -->
+    <div id="loginView">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="example@email.com" autocomplete="username" value=""
+            required />
         </div>
-      </div>
-
-      <!-- Sign Up Form -->
-      <div id="signupView" class="d-none">
-        <h2>Sign Up</h2>
-        <form id="signupForm">
-          <div class="form-group">
-            <label for="signupName">Name</label>
-            <input
-              type="text"
-              id="signupName"
-              placeholder="Your full name"
-              value=""
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="signupEmail">Email</label>
-            <input
-              type="email"
-              id="signupEmail"
-              placeholder="example@email.com"
-              autocomplete="username"
-              value=""
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="signupPassword">Password</label>
-            <input
-              type="password"
-              id="signupPassword"
-              placeholder="Create a strong password (min 6 characters)"
-              autocomplete="current-password"
-              value=""
-              required
-            />
-          </div>
-          <button type="submit" class="submit-btn">Submit</button>
-        </form>
-        <div class="toggle-text">
-          Already have an account?
-          <a class="toggle-link" id="toLogin" href="#">Login</a>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password"
+            required />
         </div>
+        <button type="submit" class="submit-btn">Log in</button>
+      </form>
+      <div class="toggle-text">
+        Don't have an account?
+        <a class="toggle-link" id="toSignup" href="#">Sign up</a>
       </div>
     </div>
 
-    
-  </body>
+    <!-- Sign Up Form -->
+    <div id="signupView" class="d-none">
+      <h2>Sign Up</h2>
+      <form id="signupForm">
+        <div class="form-group">
+          <label for="signupName">Name</label>
+          <input type="text" id="signupName" placeholder="Your full name" value="" required />
+        </div>
+        <div class="form-group">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" placeholder="example@email.com" autocomplete="username" value=""
+            required />
+        </div>
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="Create a strong password (min 6 characters)"
+            autocomplete="current-password" value="" required />
+        </div>
+        <button type="submit" class="submit-btn">Submit</button>
+      </form>
+      <div class="toggle-text">
+        Already have an account?
+        <a class="toggle-link" id="toLogin" href="#">Login</a>
+      </div>
+    </div>
+  </div>
+
+
+</body>
+
 </html>
 
-    <!---------------------------------------------->
-    <!-- Your own JavaScript scripts go here      -->
-    <!---------------------------------------------->
+<!---------------------------------------------->
+<!-- Your own JavaScript scripts go here      -->
+<!---------------------------------------------->
 
-    <!-- Firebase and authentication related scripts -->
-    <!-- The order of loading matters -->
-    <script type="module" src="/src/firebaseAPIConfig.js"></script>
-    <script type="module" src="/src/authentication.js"></script>
-    <script type="module" src="/src/loginSignup.js"></script>
-  </body>
+<!-- Firebase and authentication related scripts -->
+<!-- The order of loading matters -->
+<script type="module" src="/src/firebaseAPIConfig.js"></script>
+<script type="module" src="/src/authentication.js"></script>
+<script type="module" src="/src/loginSignup.js"></script>
+</body>
+
 </html>
